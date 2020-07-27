@@ -1,0 +1,93 @@
+#!/bin/bash
+
+source common
+
+# Get the target
+DEVICE=$1
+if [[ -z ${DEVICE} ]]; then
+	error "Device not specified"
+else
+	shift
+fi
+
+# Flag picker
+PARAMS="${*}"
+while [[ ${#} -ge 1 ]]; do
+	case ${1} in
+		"-c"|"--clean")
+			BUILD_CLEAN=y
+			;;
+		"-cc"|"--ccache")
+			BUILD_CCACHE=y
+			;;
+		"-f"|"--ftp")
+			FTP_UPLOAD=y
+			;;
+		"-r"|"--rom")
+			shift && enforce_value "${@}"
+			BUILD_ROM=${1}
+			;;
+		*)
+			warning "Skipping unknown parameter: ${1}"
+			;;
+		esac
+		shift
+done
+
+if [[ -z ${BUILD_ROM} ]]; then
+	BUILD_ROM="lineage"
+fi
+
+if [[ -d ${ROOT_PATH}/${BUILD_ROM} ]]; then
+	cd ${ROOT_PATH}/${BUILD_ROM}
+else
+	error "The ROM source isn't there, try syncing it first!"
+fi
+
+ftp_upload_check
+
+# Allocate sufficient RAM amount for Jack compiler to avoid errors
+# In our case it's 8GB
+#export ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx8G"
+#./prebuilts/sdk/tools/jack-admin kill-server
+#./prebuilts/sdk/tools/jack-admin start-server
+
+if [[ ${BUILD_CLEAN} == 'y' ]]; then
+	make clean
+fi
+
+if [[ ${BUILD_CCACHE} == 'y' ]]; then
+	export USE_CCACHE=1
+	export CCACHE_EXEC=/usr/bin/ccache
+	ccache -M 50G
+fi
+
+# Set the flex localization
+export LC_ALL=C
+
+# Initializationizing!
+. build/envsetup.sh
+
+# Lunch-time!
+lunch ${BUILD_ROM}_${DEVICE}-userdebug
+
+# Let's build da shit
+mka api-stubs-docs
+mka hiddenapi-lists-docs
+mka system-api-stubs-docs
+mka test-api-stubs-docs
+mka bacon | tee -a "${BUILD_ROM}-${DEVICE}_$(date +%Y%m%d%H%M).log"
+
+# Initialize the outputs
+OUT_PATH=out/target/product/${DEVICE}
+OUT_ZIP=$(find ${OUT_PATH} -maxdepth 1 -name *UNOFFICIAL*.zip)
+OUT_MD5="${OUT_ZIP}.md5sum"
+
+if [[ -f ${OUT_ZIP} ]]; then
+	if [[ ${FTP_UPLOAD} == 'y' ]]; then
+		curl -ftp-pasv -T ${OUT_PATH}/${OUT_ZIP} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+		curl -ftp-pasv -T ${OUT_PATH}/${OUT_MD5} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+	fi
+else
+	error "Something went wrong during the compilation process"
+fi

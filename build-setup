@@ -1,0 +1,215 @@
+#!/bin/bash
+
+source common
+
+# Count input arguments
+if [[ "$#" -lt '2' ]]; then
+	error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
+else
+	for arg in ${@}; do
+		if [[ ${arg} =~ '@' ]]; then
+			GIT_USER_MAIL=${arg}
+		else
+			GIT_USER_NAME=${arg}
+		fi
+	done
+	if [[ -z ${GIT_USER_NAME} ]] || [[ -z ${GIT_USER_MAIL} ]]; then
+		error "Improper arguments, either git email or username is missing"
+	fi
+fi
+
+# Setup directory structure
+mkdir -p ${MISC} \
+		 ${ANDROID_PATH}
+
+# Check whether we are running either Debian or Arch based distro
+OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=")
+if [[ -z ${OS_BASE_DIST} ]]; then
+	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
+fi
+
+ARCH_PACKAGES=(
+	aarch64-linux-gnu-gcc
+	android-tools
+	android-udev
+	base-devel
+	bc
+	bison
+	ccache
+	clang
+	cmake
+	cpio
+	curl
+	git
+	gperf
+	flex
+	gnupg
+	imagemagick
+	jdk8-openjdk
+	lib32-fakeroot
+	lib32-gcc-libs
+	lib32-libltdl
+	lib32-ncurses
+	lib32-readline
+	lib32-zlib
+	libxslt
+	lld
+	lzop
+	make
+	ncurses
+	ninja
+	perl-switch
+	pngcrush
+	python
+	python2
+	repo
+	rsync
+	schedtool
+	sdl
+	squashfs-tools
+	unzip
+	vim
+	wxgtk2
+	xclip
+	zip
+	zlib
+)
+
+DEBIAN_PACKAGES=(
+	android-tools-adb
+	android-tools-fastboot
+	bc
+	bison
+	build-essential
+	ccache
+	clang
+	curl
+	flex
+	g++-multilib
+	gcc-multilib
+	gnupg
+	gperf
+	imagemagick
+	libncurses-dev
+	lib32readline-dev
+	lib32z1-dev
+	libesd0-dev
+	liblz4-tool
+	libncurses5-dev
+	libsdl1.2-dev
+	libssl-dev
+	libwxgtk3.0-dev
+	libxml2
+	libxml2-utils
+	lzop
+	openjdk-8-jdk
+	pngcrush
+	python
+	python2
+	repo
+	rsync
+	schedtool
+	squashfs-tools
+	vim
+	xclip
+	xsltproc
+	yasm
+	zip
+	zlib1g-dev
+)
+
+# Add sources from xenial for deprecated packages
+if [[ 'debian' == ${OS_BASE_DIST} ]]; then
+	warning "Adding additional sources"
+	sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+	echo "deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe" | sudo tee -a /etc/apt/sources.list
+	echo "deb-src http://us.archive.ubuntu.com/ubuntu/ xenial main universe" | sudo tee -a /etc/apt/sources.list
+fi
+
+# Configure multilib, makepkg and update before installing our tools
+if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+	warning "Configuring multilib"
+	sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+	sudo sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$(nproc --all)\"/g" /etc/makepkg.conf
+	sudo pacman -Syyu --noconfirm || error "Something went wrong while updating packages"
+else
+	sudo apt-get update && sudo apt-get dist-upgrade -y || error "Something went wrong while updating packages"
+fi
+
+# Install required packages
+warning "Installing required packages and their dependencies"
+if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+	sudo pacman -S --needed --noconfirm ${ARCH_PACKAGES[@]} || error "Error installing packages"
+else
+	sudo apt-get install -y ${DEBIAN_PACKAGES[@]} || error "Error installing packages"
+fi
+
+# Install AUR packages if on Arch
+warning "Installing AUR packages"
+if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+	yay -S --answerclean A --answerdiff N --needed lib32-ncurses5-compat-libs \
+					rsync ncurses5-compat-libs \
+					xml2 || error "Error installing AUR packages"
+fi
+
+# Cleanup
+warning "Cleaning up"
+if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+	sudo pacman -R --noconfirm $(pacman -Qdtq)
+else
+	sudo apt-get autoremove -y &>/dev/null
+	sudo mv --force /etc/apt/sources.list.backup /etc/apt/sources.list
+fi
+
+# Setup Git
+git config --global user.name ${GIT_USER_NAME}
+git config --global user.email ${GIT_USER_MAIL}
+git config --global url.ssh://git@github.com/.insteadOf https://github.com/
+git config --global core.excludesfile ~/.gitignore_global
+git config --global core.editor vim
+
+# Add my rules
+{
+	echo "# Personal exclusions #"
+	echo "#######################"
+	echo "out/"
+	echo "*.ko"
+	echo "Image.*"
+	echo "zImage*"
+	echo "dtbo*"
+	echo "net/wireguard"
+	echo "*.rej"
+	echo ".DS_Store"
+	echo ".DS_Store?"
+	echo "*.log"
+} >> ~/.gitignore_global
+
+# Setup Python2.7 to run alongside Python3
+warning "Setting up Python 2 to run alongside Python 3"
+mkdir -p ~/bin
+ln -s /usr/bin/python2 ~/bin/python
+ln -s /usr/bin/python2-config ~/bin/python-config
+export PATH=~/bin:$PATH
+
+
+# Generate SSH keys
+if [[ -f ~/.ssh/id_rsa.pub ]]; then
+	warning "Copying your existing SSH key..."
+	xclip -sel clip < ~/.ssh/id_rsa.pub
+else
+	warning "Generating a new SSH key"
+	ssh-keygen -t rsa -b 4096 -C "${GIT_USER_MAIL}" -P "" -f ~/.ssh/id_rsa -q
+	eval "$(ssh-agent -s)"
+	ssh-add ~/.ssh/id_rsa
+	xclip -sel clip < ~/.ssh/id_rsa.pub
+fi
+
+warning "Restoring the .bashrc profile"
+{
+	echo ""
+	cat dotfiles/bashrc
+} >> ~/.bashrc
+
+warning "Now go to your GitHub account and follow these steps: \n1) Settings \n2) SSH and GPG keys \n3) New SSH key \n4) Click on the 'Key' field and press CTRL+V \n5) Click on 'Add SSH key'"
+sleep 10
+warning "The setup is done, please reboot your computer before compiling AOSP first"

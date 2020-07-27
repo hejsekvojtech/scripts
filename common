@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Terminal colors
+# red = errors, cyan = warnings, green = confirmations, blue = informational
+# plain for generic text, bold for titles, reset flag at each end of line
+# plain blue should not be used for readability reasons - use plain cyan instead
+CLR_RST=$(tput sgr0)                        ## reset flag
+CLR_RED=$CLR_RST$(tput setaf 1)             #  red, plain
+CLR_GRN=$CLR_RST$(tput setaf 2)             #  green, plain
+CLR_BLU=$CLR_RST$(tput setaf 4)             #  blue, plain
+CLR_CYA=$CLR_RST$(tput setaf 6)             #  cyan, plain
+CLR_BLD=$(tput bold)                        ## bold flag
+CLR_BLD_RED=$CLR_RST$CLR_BLD$(tput setaf 1) #  red, bold
+CLR_BLD_GRN=$CLR_RST$CLR_BLD$(tput setaf 2) #  green, bold
+CLR_BLD_BLU=$CLR_RST$CLR_BLD$(tput setaf 4) #  blue, bold
+CLR_BLD_CYA=$CLR_RST$CLR_BLD$(tput setaf 6) #  cyan, bold
+
+# Print the error message, then exit
+function error() {
+	echo ""
+	echo -e "${CLR_BLD_RED}- error: ${@}${CLR_RST}"
+	echo ""
+	exit 1
+}
+
+# Print the warning message and continue
+function warning() {
+	echo ""
+	echo -e "${CLR_BLD_CYA}- warning: ${@}${CLR_RST}"
+	echo ""
+}
+
+# Enforces the value needed for two-part flags
+function enforce_value() {
+	if [[ ${#} -lt 1 ]]; then
+		error "An additional value is needed for '${@}' flag!${CLR_RST}"
+	fi
+}
+
+# Clone Clang or GCC or both if they're not cloned yet
+function check_gcc() {
+	if [[ ! -d ${PREBUILT_GCC} ]]; then
+		warning "The GCC compiler isn't cloned yet! Cloning now..."
+		git -C ${ROOT_PATH} clone --depth=1 -b android-9.0.0_r1 --single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/ ${PREBUILT_GCC}
+	fi
+}
+
+function check_clang() {
+	if [[ ! -d ${PREBUILT_CLANG} ]]; then
+		warning "The Clang compiler isn't cloned yet! Cloning now..."
+		git -C ${ROOT_PATH} clone --single-branch https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/ ${PREBUILT_CLANG} || "Git clone failed!"
+	else
+		warning "Updating repository to its remote HEAD state"
+		git -C ${PREBUILT_CLANG} fetch origin master || error "Failed to fetch commits from origin!"
+		git -C ${PREBUILT_CLANG} reset --hard origin/master
+	fi
+
+	# Get the latest version (we only care about those starting with 'clang-r')
+	srcpath=$(pwd)
+	cd ${PREBUILT_CLANG}
+	clangvers=($(ls -d clang-r* | sort -rn))
+	PREBUILT_CLANG_REVISION=${clangvers[0]}
+	cd ${srcpath}
+}
+
+function ftp_upload_check() {
+	if [[ ${FTP_UPLOAD} == 'y' ]] && [[ -f ${ROOT_PATH}/ftp-afh ]]; then
+		source ${ROOT_PATH}/ftp-afh
+	else
+		FTP_UPLOAD=n
+	fi
+}
+
+function abort() {
+	rm -rf out
+	error "Process terminated by user!"
+}
+
+# Initialize environment entrypoints
+ROOT_PATH=~/android
+MISC=${ROOT_PATH}/misc
+
+# Initialize sources
+AK3_SOURCE=${ROOT_PATH}/AnyKernel3
+TWRP_SOURCE=${ROOT_PATH}/TWRP
+
+# Initialize prebuilts
+PREBUILT_GCC=${ROOT_PATH}/prebuilt-gcc
+PREBUILT_CLANG=${ROOT_PATH}/prebuilt-clang
+
+# That's me
+ME="khaos@affinity"
+
+# Handle terminating the process by pressing CTRL+C with a function
+trap abort INT
+
+# Recreate directory structure if missing
+if [[ ! -d '${ROOT_PATH}' ]]; then
+	mkdir -p ${MISC}
+fi

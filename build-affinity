@@ -1,0 +1,191 @@
+#!/bin/bash
+
+source common
+
+# Get the target
+DEVICE=$1
+if [[ -z "${DEVICE}" ]]; then
+	error "Device not specified"
+else
+	shift
+fi
+
+if [[ -d ${ROOT_PATH}/Affinity-${DEVICE} ]]; then
+	cd ${ROOT_PATH}/Affinity-${DEVICE}
+else
+	error "The Affinity Kernel source isn't there, try clonning it first!"
+fi
+
+# Set the default values
+BUILD_COMPILER="clang"
+BUILD_VARIANT="oos"
+
+# Flag picker
+PARAMS="${*}"
+while [[ ${#} -ge 1 ]]; do
+	case ${1} in
+		"-p"|"--personal")
+			BUILD_PERSONAL=y
+			;;
+		"-c"|"--compiler")
+			shift && enforce_value "${@}"
+			BUILD_COMPILER=${1}
+			;;
+		"-r"|"--revision")
+			shift && enforce_value "${@}"
+			BUILD_REVISION=r${1}
+			;;
+		"-v"|"--variant")
+			shift && enforce_value "${@}"
+			BUILD_VARIANT=${1}
+			;;
+		*)
+			warning "Skipping unknown parameter: ${1}"
+			;;
+		esac
+		shift
+done
+
+if [[ -z ${BUILD_REVISION} ]]; then
+	BUILD_PERSONAL=y
+elif [[ -z ${BUILD_REVISION} ]] && [[ "${BUILD_PERSONAL}" != 'y' ]]; then
+	BUILD_PERSONAL=y
+fi
+
+# Initialize the strings
+AFFINITY_BRANCH=$(git branch | grep '*' | tr -d '* ')
+AFFINITY_ANDROID=$(echo ${AFFINITY_BRANCH} | cut -f1 -d "-")
+
+if [[ "${AFFINITY_BRANCH}" == ${AFFINITY_ANDROID} ]]; then
+	AFFINITY_BUILD="normal"
+	AFFINITY_BUILD_STRING="$(echo ${BUILD_VARIANT} | tr '[:lower:]' '[:upper:]')"
+else
+	AFFINITY_BUILD=$(echo ${AFFINITY_BRANCH} | cut -f2 -d "-")
+	AFFINITY_BUILD_STRING="$(echo ${AFFINITY_BUILD} | tr '[:lower:]' '[:upper:]')-$(echo ${BUILD_VARIANT} | tr '[:lower:]' '[:upper:]')"
+fi
+
+if [[ "${BUILD_PERSONAL}" == 'y' ]]; then
+	BUILD_REVISION=$(git log --pretty=format:'%h' -n 1)
+else
+	# Sync local repo with remote for release
+	git fetch origin
+	git reset --hard origin/${AFFINITY_BRANCH}
+	git clean -xdf
+fi
+
+# Output ZIP variables and versioning
+AK3_ZIP="Affinity-${AFFINITY_ANDROID}-${AFFINITY_BUILD_STRING}-${DEVICE}-${BUILD_REVISION}.zip"
+AK3_ZIP_MOVE="${ROOT_PATH}/Affinity-releases"
+LOCALVERSION_STRING="-${BUILD_REVISION}"
+
+function clone_ak3() {
+	git clone https://github.com/hejsekvojtech/AnyKernel3.git -b ${DEVICE} ${AK3_SOURCE}
+	
+	if [[ ! -d ${AK3_SOURCE} ]]; then
+		error "Attempting to sync a non-existing branch, exiting..."
+	fi
+
+	warning "Done! The build process will now continue..."
+}
+
+# Sync the AnyKernel3 source if it's missing or doesn't match kernel build
+if [[ ! -d ${AK3_SOURCE} ]]; then
+	warning "The AnyKernel3 source isn't present! Cloning now..."
+	clone_ak3
+else
+	if [[ "${BUILD_PERSONAL}" != 'y' ]]; then
+		cd ${AK3_SOURCE}
+		AK3_BRANCH=$(git branch | grep '*' | tr -d '* ')
+		AK3_DEVICE=$(echo ${AK3_BRANCH} | cut -f1 -d "-")
+		cd ${AFFINITY_SOURCE}
+
+		if [[ ${AK3_DEVICE} != ${DEVICE} ]]; then
+			warning "Incorrect AnyKernel3 base is currently present, syncing the correct one..."
+			rm -rf ${AK3_SOURCE}
+			clone_ak3
+		fi
+	fi
+fi
+
+# Clean up from last compile
+rm -rf out && mkdir -p out
+
+# Initialize defconfig
+make O=out ARCH=arm64 affinity-${BUILD_VARIANT}_defconfig
+
+# Make wrapper for 'make' function for GCC
+function make_wrapper_gcc() {
+	make -j$(nproc --all) \
+		 O=out \
+		 ARCH=arm64 \
+		 LOCALVERSION="${LOCALVERSION_STRING}" \
+		 CROSS_COMPILE="${PREBUILT_GCC}/bin/aarch64-linux-android-"
+}
+
+# Make wrapper for 'make' function for Clang
+function make_wrapper_clang() {
+	make -j$(nproc --all) \
+		 O=out \
+		 ARCH=arm64 \
+		 CC="${PREBUILT_CLANG}/${PREBUILT_CLANG_REVISION}/bin/clang" \
+		 CLANG_TRIPLE=aarch64-linux-gnu- \
+		 LOCALVERSION="${LOCALVERSION_STRING}" \
+		 KBUILD_COMPILER_STRING="$(${PREBUILT_CLANG}/${PREBUILT_CLANG_REVISION}/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g')" \
+		 CROSS_COMPILE="${PREBUILT_GCC}/bin/aarch64-linux-android-"
+}
+
+# Inform user what branch are we about to compile and let the echo stick there for a while
+warning "Compiling Affinity Kernel from branch (${AFFINITY_BRANCH} - $(echo ${BUILD_VARIANT} | tr '[:lower:]' '[:upper:]'))"
+sleep 5
+
+export KBUILD_BUILD_USER=khaos227
+export KBUILD_BUILD_HOST=tardis
+
+# Bring it!
+if [[ "${BUILD_COMPILER}" == 'clang' ]]; then
+	check_gcc
+	check_clang
+	make_wrapper_clang
+elif [[ "${BUILD_COMPILER}" == 'gcc' ]]; then
+	check_gcc
+	make_wrapper_gcc
+else
+	error "'${BUILD_COMPILER}' is not a valid compiler!"
+fi
+
+# Exit the script if the build has failed
+if [[ ! -f out/arch/arm64/boot/Image.gz-dtb ]]; then
+	rm -rf out
+	error "Build for ${DEVICE} failed!"
+fi
+
+cp out/arch/arm64/boot/Image.gz-dtb ${AK3_SOURCE}/Image.gz-dtb
+
+# Clear output
+rm -rf out
+
+cd ${AK3_SOURCE}
+
+# Generate Affinity Kernel zip
+zip -r9 ${AK3_ZIP} * -x .git README.md *placeholder *.zip
+
+# Clean the AK3 folder structure for future use
+rm -rf Image.gz-dtb
+
+# Move the Affinity Kernel zip to our release folder, then push it to GitHub
+if [[ -z "${BUILD_PERSONAL}" ]]; then
+	if [[ ! -d "${AK3_ZIP_MOVE}" ]]; then
+		git clone https://github.com/hejsekvojtech/Affinity-releases.git -b ${DEVICE} ${AK3_ZIP_MOVE}
+	fi
+	
+	mv ${AK3_ZIP} ${AK3_ZIP_MOVE}/${AK3_ZIP}
+	cd ${AK3_ZIP_MOVE}
+	
+	git remote set-url origin git@github.com:$(git config user.name)/Affinity-releases.git
+	git add ${AK3_ZIP}
+	git commit -s -m "release: Affinity Kernel ${BUILD_REVISION} (${AFFINITY_BUILD_STRING} - ${AFFINITY_ANDROID})"
+	git push origin ${DEVICE}
+	warning "Done, Affinity Kernel ${BUILD_REVISION} has been built successfuly and pushed to GitHub!"
+else
+	warning "It's done! Affinity Kernel package '${AK3_ZIP}' is in the AnyKernel3 folder"
+fi

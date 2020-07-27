@@ -1,0 +1,94 @@
+#!/bin/bash
+
+source common
+
+if [[ -d ${TWRP_SOURCE} ]]; then
+	cd ${TWRP_SOURCE}
+else
+	error "The TWRP source isn't there, try syncing it first!"
+fi
+
+# Get the target
+DEVICE=$1
+if [[ -z ${DEVICE} ]]; then
+	error "Device not specified"
+else
+	shift
+fi
+
+# Set the default values
+export TW_DEVICE_VERSION="0"
+
+# Flag picker
+PARAMS="${*}"
+while [[ ${#} -ge 1 ]]; do
+	case ${1} in
+		"-f"|"--ftp")
+			FTP_UPLOAD=y
+			;;
+		"-tv"|"--twrpver")
+			shift && enforce_value "${@}"
+			export TW_DEVICE_VERSION=${1}
+			;;
+		*)
+			warning "Skipping unknown parameter: ${1}"
+			;;
+		esac
+		shift
+done
+
+if [[ ! -d compiled ]]; then
+	mkdir -p compiled/logs
+fi
+
+ftp_upload_check
+
+# Clean-up before we can begin
+if [[ $(find $(pwd) -maxdepth 1 -name *.log | wc -l) -gt '0' ]]; then
+	rm *.log
+	make clean || error "It failed, idk why"
+fi
+
+if [[ $(whoami)@$(uname -n) == ${ME} ]]; then
+	if [[ ${DEVICE} == 'cheeseburger' ]] && [[ ! -d device/oneplus/${DEVICE} ]]; then
+		warning "Device tree for '${DEVICE}' not found, cloning now..."
+		git clone https://github.com/hejsekvojtech/android_device_oneplus_cheeseburger.git -b android-9.0 device/oneplus/cheeseburger
+	fi
+fi
+
+# Get the full TWRP version string
+VERSION=$(grep 'TW_MAIN_VERSION_STR' bootable/recovery/variables.h -m 1 | cut -d \" -f2)-${TW_DEVICE_VERSION}
+
+# Initialize paths and outputs
+OUT_TARGET_BASENAME=twrp-${VERSION}-${DEVICE}
+OUT_LOG=${OUT_TARGET_BASENAME}-$(date +%Y%m%d%H%M).log
+OUT_RECOVERY_IMAGE=${OUT_TARGET_BASENAME}-$(date +%Y%m%d%H%M)-$(whoami).img
+OUT_PATH=out/target/product/${DEVICE}
+
+# Initializationizing!
+source build/envsetup.sh
+
+# Lunch-time!
+lunch omni_${DEVICE}-eng
+
+# Enforce some stuff to avoid unnecessary errors
+export ALLOW_MISSING_DEPENDENCIES=true
+export LC_ALL=C
+
+# Let's build da shit
+mka adbd recoveryimage | tee -a ${OUT_LOG}
+
+# Checking the output
+if [[ -f ${OUT_PATH}/recovery.img ]]; then
+	mv ${OUT_PATH}/recovery.img compiled/${OUT_RECOVERY_IMAGE}
+	mv ${OUT_LOG} compiled/logs/${OUT_LOG}
+	warning "You did it you son of a bitch, you did it! Go grab it at 'compiled/${OUT_RECOVERY_IMAGE}'!"
+	
+	if [[ ${FTP_UPLOAD} == 'y' ]]; then
+		curl -ftp-pasv -T compiled/${OUT_RECOVERY_IMAGE} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+		curl -ftp-pasv -T compiled/logs/${OUT_LOG} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+	fi
+else
+	error "TWRP image build failed for '${DEVICE}'!, cleaning output, check the build log '${OUT_LOG}'"
+	make clean > /dev/null 2>&1
+fi
