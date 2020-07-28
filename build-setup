@@ -33,7 +33,6 @@ ARCH_PACKAGES=(
 	android-tools
 	android-udev
 	base-devel
-	bc
 	bison
 	ccache
 	clang
@@ -44,7 +43,6 @@ ARCH_PACKAGES=(
 	gperf
 	flex
 	gnupg
-	imagemagick
 	jdk8-openjdk
 	lib32-fakeroot
 	lib32-gcc-libs
@@ -61,7 +59,6 @@ ARCH_PACKAGES=(
 	perl-switch
 	pngcrush
 	python
-	python2
 	repo
 	rsync
 	schedtool
@@ -78,53 +75,32 @@ ARCH_PACKAGES=(
 DEBIAN_PACKAGES=(
 	android-tools-adb
 	android-tools-fastboot
-	bc
 	bison
 	build-essential
 	ccache
 	clang
-	curl
 	flex
+	fontconfig
 	g++-multilib
 	gcc-multilib
 	gnupg
-	gperf
 	imagemagick
-	libncurses-dev
-	lib32readline-dev
+	lib32ncurses-dev
 	lib32z1-dev
-	libesd0-dev
-	liblz4-tool
-	libncurses5-dev
-	libsdl1.2-dev
-	libssl-dev
-	libwxgtk3.0-dev
-	libxml2
+	libc6-dev-i386
+	libgl1-mesa-dev
+	libx11-dev
 	libxml2-utils
-	lzop
 	openjdk-8-jdk
-	pngcrush
-	python
 	python2
-	repo
 	rsync
-	schedtool
-	squashfs-tools
 	vim
+	x11proto-core-dev
 	xclip
 	xsltproc
-	yasm
 	zip
 	zlib1g-dev
 )
-
-# Add sources from xenial for deprecated packages
-if [[ 'debian' == ${OS_BASE_DIST} ]]; then
-	warning "Adding additional sources"
-	sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
-	echo "deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe" | sudo tee -a /etc/apt/sources.list
-	echo "deb-src http://us.archive.ubuntu.com/ubuntu/ xenial main universe" | sudo tee -a /etc/apt/sources.list
-fi
 
 # Configure multilib, makepkg and update before installing our tools
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
@@ -157,8 +133,7 @@ warning "Cleaning up"
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
 	sudo pacman -R --noconfirm $(pacman -Qdtq)
 else
-	sudo apt-get autoremove -y &>/dev/null
-	sudo mv --force /etc/apt/sources.list.backup /etc/apt/sources.list
+	sudo apt-get autoremove -y
 fi
 
 # Setup Git
@@ -167,6 +142,13 @@ git config --global user.email ${GIT_USER_MAIL}
 git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 git config --global core.excludesfile ~/.gitignore_global
 git config --global core.editor vim
+
+if [[ 'arch' != ${OS_BASE_DIST} ]]; then
+	mkdir ~/bin
+	PATH=~/bin:$PATH
+	curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+	chmod a+x ~/bin/repo
+fi
 
 # Add my rules
 {
@@ -183,14 +165,6 @@ git config --global core.editor vim
 	echo ".DS_Store?"
 	echo "*.log"
 } >> ~/.gitignore_global
-
-# Setup Python2.7 to run alongside Python3
-warning "Setting up Python 2 to run alongside Python 3"
-mkdir -p ~/bin
-ln -s /usr/bin/python2 ~/bin/python
-ln -s /usr/bin/python2-config ~/bin/python-config
-export PATH=~/bin:$PATH
-
 
 # Generate SSH keys
 if [[ -f ~/.ssh/id_rsa.pub ]]; then
