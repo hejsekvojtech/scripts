@@ -28,51 +28,42 @@ if [[ -z ${OS_BASE_DIST} ]]; then
 	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
 fi
 
-ARCH_PACKAGES=(
-	aarch64-linux-gnu-gcc
+ARCH_dependencies=(
 	android-tools
 	android-udev
 	base-devel
-	bison
+	bc
 	ccache
 	clang
-	cmake
-	cpio
 	curl
+	gcc
 	git
-	gperf
-	flex
 	gnupg
-	jdk8-openjdk
-	lib32-fakeroot
-	lib32-gcc-libs
-	lib32-libltdl
+	gperf
+	imagemagick
 	lib32-ncurses
 	lib32-readline
 	lib32-zlib
 	libxslt
-	lld
 	lzop
-	make
+	multilib-devel
 	ncurses
-	ninja
 	perl-switch
 	pngcrush
-	python
 	repo
 	rsync
 	schedtool
 	sdl
 	squashfs-tools
+	ttf-dejavu
 	unzip
-	vim
 	wxgtk2
 	xclip
 	zip
 	zlib
 )
 
-DEBIAN_PACKAGES=(
+DEBIAN_dependencies=(
 	android-tools-adb
 	android-tools-fastboot
 	bison
@@ -112,20 +103,22 @@ else
 	sudo apt-get update && sudo apt-get dist-upgrade -y || error "Something went wrong while updating packages"
 fi
 
-# Install required packages
-warning "Installing required packages and their dependencies"
+# Install required dependencies
+warning "Installing required dependencies"
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	sudo pacman -S --needed --noconfirm ${ARCH_PACKAGES[@]} || error "Error installing packages"
+	sudo pacman -S --needed --noconfirm ${ARCH_dependencies[@]} || error "Error installing dependencies"
 else
-	sudo apt-get install -y ${DEBIAN_PACKAGES[@]} || error "Error installing packages"
+	sudo apt-get install -y ${DEBIAN_dependencies[@]} || error "Error installing dependencies"
 fi
 
-# Install AUR packages if on Arch
-warning "Installing AUR packages"
+# Install AUR dependencies if on Arch
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	yay -S --answerclean A --answerdiff N --needed lib32-ncurses5-compat-libs \
-					rsync ncurses5-compat-libs \
-					xml2 || error "Error installing AUR packages"
+	warning "Installing required dependencies from AUR"
+	gpg --keyserver keys.gnupg.net --recv-keys 702353E0F7E48EDB # This will import missing PGP key
+	yay -S --answerclean A --answerdiff N --needed \
+	lib32-ncurses5-compat-libs \
+	ncurses5-compat-libs \
+	xml2 || error "Error installing required dependencies from AUR"
 fi
 
 # Cleanup
@@ -149,6 +142,11 @@ if [[ 'arch' != ${OS_BASE_DIST} ]]; then
 	curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
 	chmod a+x ~/bin/repo
 fi
+
+# Configure Python for AOSP
+mkdir ~/bin
+ln -s /bin/python2 ~/bin/python
+export PATH=$HOME/bin:$PATH
 
 # Add my rules
 {
