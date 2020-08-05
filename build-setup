@@ -176,11 +176,13 @@ else
 	xclip -sel clip < ~/.ssh/id_rsa.pub
 fi
 
-warning "Restoring the .bashrc profile"
-{
-	echo ""
-	cat dotfiles/bashrc
-} >> ~/.bashrc
+function restore_dotfiles() {
+	warning "Restoring .${1}"
+	cat dotfiles/.${1} > ~/.${1}
+}
+
+restore_dotfiles bashrc
+restore_dotfiles vimrc
 
 warning "Now go to your GitHub account and follow these steps: \n1) Settings \n2) SSH and GPG keys \n3) New SSH key \n4) Click on the 'Key' field and press CTRL+V \n5) Click on 'Add SSH key'"
 sleep 10

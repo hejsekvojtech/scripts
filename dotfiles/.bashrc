@@ -1,3 +1,5 @@
+source /etc/profile
+
 # COLOURS!
 txtblk='\[\e[0;30m\]' # Black - Regular
 txtred='\[\e[0;31m\]' # Red
@@ -43,6 +45,9 @@ export TERM=xterm-256color
 # Vim FTW!
 export EDITOR=/usr/bin/vim
 
+# More informative shell
+export PS1="\u@\h [\d]:\w \\$ \[$(tput sgr0)\]"
+
 # AOSP shit
 function build-rom() {
 	tmppath=$(pwd)
@@ -58,6 +63,8 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 alias grep='grep --color=auto'
+alias yay-upgrade='yay -Syu --nodiffmenu --noconfirm'
+alias pacman-upgrade='pacman -Syu --noconfirm'
 
 # Functions
 function md() {
