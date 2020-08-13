@@ -1,4 +1,3 @@
-source .shell/shell
-source .shell/functions
-source .shell/aliases
-source .shell/exports
+for config in $(ls ~/.shell/); do
+    source ~/shell/${config}
+done

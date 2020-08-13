@@ -61,7 +61,12 @@ function extract () {
 
 # Git functions
 function gc() {
-	git commit -s -m "${*}"
+	gcmsg=${*}
+	if [[ -z ${gcmsg} ]]; then
+		gcmsg="$(basename $(pwd)): Update"
+	fi
+
+	git commit -s -m "${gcmsg}"
 }
 
 function ga() {
@@ -69,5 +74,5 @@ function ga() {
 }
 
 function gac() {
-	git add . && git commit -s -m "${*}"
+	git add . && gc "${*}"
 }
