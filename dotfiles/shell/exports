@@ -1,0 +1,9 @@
+# Longer terminal scrollback
+export HISTSIZE=100000
+export HISTFILESIZE=2000000
+
+# UI
+export TERM=xterm-256color
+
+# Vim FTW!
+export EDITOR=/usr/bin/vim

@@ -1,0 +1,4 @@
+source .shell/shell
+source .shell/functions
+source .shell/aliases
+source .shell/exports
