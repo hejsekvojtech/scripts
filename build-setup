@@ -28,7 +28,7 @@ if [[ -z ${OS_BASE_DIST} ]]; then
 	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
 fi
 
-ARCH_dependencies=(
+arch_dependencies=(
 	android-tools
 	android-udev
 	base-devel
@@ -50,6 +50,7 @@ ARCH_dependencies=(
 	ncurses
 	perl-switch
 	pngcrush
+	python2
 	repo
 	rsync
 	schedtool
@@ -63,7 +64,7 @@ ARCH_dependencies=(
 	zlib
 )
 
-DEBIAN_dependencies=(
+debian_dependencies=(
 	android-tools-adb
 	android-tools-fastboot
 	bison
@@ -106,9 +107,9 @@ fi
 # Install required dependencies
 warning "Installing required dependencies"
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	sudo pacman -S --needed --noconfirm ${ARCH_dependencies[@]} || error "Error installing dependencies"
+	sudo pacman -S --needed --noconfirm ${arch_dependencies[@]} || error "Error installing dependencies"
 else
-	sudo apt-get install -y ${DEBIAN_dependencies[@]} || error "Error installing dependencies"
+	sudo apt-get install -y ${debian_dependencies[@]} || error "Error installing dependencies"
 fi
 
 # Install AUR dependencies if on Arch
@@ -176,9 +177,10 @@ fi
 
 function restore_dotfiles() {
 	warning "Restoring .${1}"
-	cat dotfiles/${1} >> .${1}
+	cat dotfiles/${1} >> ~/.${1}
 }
 
+# Restore core configs
 restore_dotfiles bashrc
 restore_dotfiles vimrc
 

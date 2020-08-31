@@ -5,7 +5,6 @@ function md() {
 # YAY FTW!
 function cleanup() {
 	yay -Sc --noconfirm
-	yay -Rsn --noconfirm $(yay -Qdtq)
 }
 
 function install() {
@@ -14,6 +13,11 @@ function install() {
 
 function nuke() {
 	yay -R --noconfirm ${@}
+}
+
+# AOSP stuff
+function find-blobs() {
+    find ${OOS_MNT}/vendor -name ${*} | awk -F "OOS" '{print $2}' | tee -a '${ANDROID}/proprietary.txt'
 }
 
 # Extract it!
@@ -75,4 +79,22 @@ function ga() {
 
 function gac() {
 	git add . && gc "${*}"
+}
+
+function greset() {
+	git reset --hard origin/HEAD
+}
+
+# Housekeeping
+function sync-rc() {
+	if [[ -d '/home/khaos/scripts' ]]; then 
+		\cp -urf ~/.shell/* ${SCRIPTS}/dotfiles/shell/
+		git -C ${SCRIPTS} add .
+		git -C ${SCRIPTS} commit -s -m "scripts: Sync config as of $(date +%Y%M%d)"
+		git -C ${SCRIPTS} push origin master
+	else
+		echo "Yeet"
+		git clone https://github.com/hejsekvojtech/scripts.git -b master ${SCRIPTS}
+		sync-rc
+	fi
 }
