@@ -87,13 +87,12 @@ function greset() {
 
 # Housekeeping
 function sync-rc() {
-	if [[ -d '/home/khaos/scripts' ]]; then 
+	if [[ -d ${SCRIPTS} ]]; then 
 		\cp -urf ~/.shell/* ${SCRIPTS}/dotfiles/shell/
 		git -C ${SCRIPTS} add .
-		git -C ${SCRIPTS} commit -s -m "scripts: Sync config as of $(date +%Y%M%d)"
+		git -C ${SCRIPTS} commit -s -m "scripts: Sync config as of $(date +%Y%m%d%H%M)"
 		git -C ${SCRIPTS} push origin master
 	else
-		echo "Yeet"
 		git clone https://github.com/hejsekvojtech/scripts.git -b master ${SCRIPTS}
 		sync-rc
 	fi

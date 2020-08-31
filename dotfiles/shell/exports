@@ -9,7 +9,6 @@ export TERM=xterm-256color
 export EDITOR=/usr/bin/vim
 
 # Dirs
-export HOME=$(pwd ~/)
-export SCRIPTS=${HOME}/scripts
+export SCRIPTS=~/scripts
 export ANDROID=$(grep 'ROOT_PATH=' ${SCRIPTS}/common | cut -f2 -d "=")
 export OOS_MNT=${ANDROID}/OOS
