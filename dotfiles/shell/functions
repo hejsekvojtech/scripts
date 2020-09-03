@@ -1,18 +1,35 @@
+OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=")
+if [[ -z ${OS_BASE_DIST} ]]; then
+	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
+fi
+
 function md() {
 	mkdir ${1} && cd ${1}
 }
 
 # YAY FTW!
 function cleanup() {
-	yay -Sc --noconfirm
+	if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+		yay -Sc --noconfirm
+	else
+		sudo apt autoremove -y
+	fi
 }
 
 function install() {
-	yay -S --noconfirm ${@}
+	if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+		yay -S --noconfirm ${@}
+	else
+		sudo apt install -y ${@}
+	fi
 }
 
 function nuke() {
-	yay -R --noconfirm ${@}
+	if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+		yay -R --noconfirm ${@}
+	else
+		sudo apt remove -y ${@}
+	fi
 }
 
 # AOSP stuff

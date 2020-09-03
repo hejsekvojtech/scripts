@@ -101,7 +101,7 @@ if [[ 'arch' == ${OS_BASE_DIST} ]]; then
 	sudo sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$(nproc --all)\"/g" /etc/makepkg.conf
 	sudo pacman -Syyu --noconfirm || error "Something went wrong while updating packages"
 else
-	sudo apt-get update && sudo apt-get dist-upgrade -y || error "Something went wrong while updating packages"
+	sudo apt update && sudo apt dist-upgrade -y || error "Something went wrong while updating packages"
 fi
 
 # Install required dependencies
@@ -109,7 +109,7 @@ warning "Installing required dependencies"
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
 	sudo pacman -S --needed --noconfirm ${arch_dependencies[@]} || error "Error installing dependencies"
 else
-	sudo apt-get install -y ${debian_dependencies[@]} || error "Error installing dependencies"
+	sudo apt install -y ${debian_dependencies[@]} || error "Error installing dependencies"
 fi
 
 # Install AUR dependencies if on Arch
@@ -127,7 +127,7 @@ warning "Cleaning up"
 if [[ 'arch' == ${OS_BASE_DIST} ]]; then
 	sudo pacman -R --noconfirm $(pacman -Qdtq)
 else
-	sudo apt-get autoremove -y
+	sudo apt autoremove -y
 fi
 
 # Setup Git
