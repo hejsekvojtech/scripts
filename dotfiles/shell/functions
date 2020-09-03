@@ -1,3 +1,7 @@
+#!/bin/bash
+
+source ${SCRIPTS}/common
+
 OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=")
 if [[ -z ${OS_BASE_DIST} ]]; then
 	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
@@ -104,12 +108,12 @@ function greset() {
 
 # Housekeeping
 function sync-rc() {
+	warning "Syncing scripts and configs..."
 	if [[ -d ${SCRIPTS} ]]; then 
 		\cp -urf ~/.shell/* ${SCRIPTS}/dotfiles/shell/
 		git -C ${SCRIPTS} add .
 		git -C ${SCRIPTS} commit -s -m "scripts: Sync config as of $(date +%Y%m%d%H%M)"
 		git -C ${SCRIPTS} push origin master
-		greset
 	else
 		git clone https://github.com/hejsekvojtech/scripts.git -b master ${SCRIPTS}
 		sync-rc
