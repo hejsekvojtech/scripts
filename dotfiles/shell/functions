@@ -109,6 +109,7 @@ function sync-rc() {
 		git -C ${SCRIPTS} add .
 		git -C ${SCRIPTS} commit -s -m "scripts: Sync config as of $(date +%Y%m%d%H%M)"
 		git -C ${SCRIPTS} push origin master
+		greset
 	else
 		git clone https://github.com/hejsekvojtech/scripts.git -b master ${SCRIPTS}
 		sync-rc
