@@ -37,16 +37,16 @@ function nuke() {
 }
 
 function upgrade() {
-    if [[ 'arch' == ${OS_BASE_DIST} ]]; then
+	if [[ 'arch' == ${OS_BASE_DIST} ]]; then
 		yay -Syyu --noconfirm --nodiffmenu
-    else
+	else
 		sudo apt update && sudo apt upgrade -y
-    fi
+	fi
 }
 
 # AOSP stuff
 function find-blobs() {
-    find ${OOS_MNT}/vendor -name ${*} | awk -F "OOS" '{print $2}' | tee -a '${ANDROID}/proprietary.txt'
+	find ${OOS_MNT}/vendor -name ${*} | awk -F "OOS" '{print $2}' | tee -a '${ANDROID}/proprietary.txt'
 }
 
 # Extract it!
