@@ -22,6 +22,3 @@ alias gd='git diff'
 alias gr='git revert'
 alias glf='git ls-files'
 
-# YAY and Pacman
-alias aurgrade='yay -Syu --nodiffmenu --noconfirm'
-alias pacgrade='pacman -Syu --noconfirm'
