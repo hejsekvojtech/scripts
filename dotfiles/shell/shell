@@ -31,3 +31,5 @@ txtrst='\[\e[0m\]'    # Text Reset
 
 # Colourful shell prompt
 export PS1="${bldcyn}\u${bldwht}@${bldcyn}\h${bldwht}: ${txtblu}\w ${bldylw}\\$ \[$(tput sgr0)\]${txtrst}"
+
+export LC_ALL=C
