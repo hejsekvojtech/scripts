@@ -22,7 +22,13 @@ function cleanup() {
 
 function install() {
 	if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-		yay -S --noconfirm ${@}
+		if [[ ${1} == '--wakawaka' ]]; then
+			warning "Using pacman backend"
+			shift
+			sudo pacman -S ${@}
+		else
+			yay -S --noconfirm ${@}
+		fi
 	else
 		sudo apt install -y ${@}
 	fi

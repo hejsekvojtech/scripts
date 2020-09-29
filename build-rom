@@ -84,9 +84,11 @@ OUT_ZIP=$(find ${OUT_PATH} -maxdepth 1 -name *UNOFFICIAL*.zip)
 OUT_MD5="${OUT_ZIP}.md5sum"
 
 if [[ -f ${OUT_ZIP} ]]; then
-	if [[ ${FTP_UPLOAD} == 'y' ]]; then
-		curl -ftp-pasv -T ${OUT_PATH}/${OUT_ZIP} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
-		curl -ftp-pasv -T ${OUT_PATH}/${OUT_MD5} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+	if [[ ${ME} =~ "$(whoami)@$(hostname)" ]]; then
+		if [[ ${FTP_UPLOAD} == 'y' ]]; then
+			curl -ftp-pasv -T ${OUT_PATH}/${OUT_ZIP} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+			curl -ftp-pasv -T ${OUT_PATH}/${OUT_MD5} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+		fi
 	fi
 else
 	error "Something went wrong during the compilation process"

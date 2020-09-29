@@ -89,7 +89,10 @@ PREBUILT_GCC=${ROOT_PATH}/prebuilt-gcc
 PREBUILT_CLANG=${ROOT_PATH}/prebuilt-clang
 
 # That's me
-ME="khaos@zeniac"
+ME=(
+	"khaos@zeniac",
+	"khaos@zenpad"
+)
 
 # Handle terminating the process by pressing CTRL+C with a function
 trap abort INT

@@ -84,9 +84,11 @@ if [[ -f ${OUT_PATH}/recovery.img ]]; then
 	mv ${OUT_LOG} compiled/logs/${OUT_LOG}
 	warning "You did it you son of a bitch, you did it! Go grab it at 'compiled/${OUT_RECOVERY_IMAGE}'!"
 	
-	if [[ ${FTP_UPLOAD} == 'y' ]]; then
-		curl -ftp-pasv -T compiled/${OUT_RECOVERY_IMAGE} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
-		curl -ftp-pasv -T compiled/logs/${OUT_LOG} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+	if [[ ${ME} =~ "$(whoami)@$(hostname)" ]]; then
+		if [[ ${FTP_UPLOAD} == 'y' ]]; then
+			curl -ftp-pasv -T compiled/${OUT_RECOVERY_IMAGE} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+			curl -ftp-pasv -T compiled/logs/${OUT_LOG} ftp://${FTP_USER}:${FTP_PASSWORD}@${FTP_HOST}
+		fi
 	fi
 else
 	error "TWRP image build failed for '${DEVICE}'!, cleaning output, check the build log '${OUT_LOG}'"
