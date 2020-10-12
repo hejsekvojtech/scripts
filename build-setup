@@ -23,9 +23,9 @@ mkdir -p ${MISC} \
 		 ${ANDROID_PATH}
 
 # Check whether we are running either Debian or Arch based distro
-OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=")
+OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=" | tr '[:upper:]' '[:lower:]')
 if [[ -z ${OS_BASE_DIST} ]]; then
-	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=")
+	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=" | tr '[:upper:]' '[:lower:]')
 fi
 
 arch_dependencies=(
