@@ -83,7 +83,7 @@ debian_dependencies=(
 	libgl1-mesa-dev
 	libx11-dev
 	libxml2-utils
-	openjdk-8-jdk
+	openjdk-8-jre-headless
 	python2
 	rsync
 	vim
