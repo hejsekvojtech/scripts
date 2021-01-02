@@ -29,7 +29,13 @@ bakwht='\[\e[47m\]'   # White
 
 txtrst='\[\e[0m\]'    # Text Reset
 
+function git_branch_prompt() {
+    if [[ -n $(git symbolic-ref --short HEAD 2>/dev/null) ]]; then
+        echo "($(git symbolic-ref --short HEAD)) "
+    fi
+}
+
 # Colourful shell prompt
-export PS1="${bldcyn}\u${bldwht}@${bldcyn}\h${bldwht}: ${txtblu}\w ${bldylw}\\$ \[$(tput sgr0)\]${txtrst}"
+export PS1="${bldcyn}\u${bldwht}@${bldcyn}\h${bldwht}: ${txtblu}\w ${bldgrn}\$(git_branch_prompt)${bldylw}\\$ \[$(tput sgr0)\]${txtrst}"
 
 export LC_ALL=C
