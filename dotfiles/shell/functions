@@ -17,13 +17,13 @@ function cleanup() {
                 sudo pacman -Sc --noconfirm
                 pacman -Qtdq | sudo pacman -Rns - 2> /dev/null
                 sudo reflector \
-            --download-timeout 30 \
-            --country France \
-            --country Czech \
-            --age 24 \
-            --protocol https \
-            --sort rate \
-            --save /etc/pacman.d/mirrorlist
+                        --download-timeout 30 \
+                        --country France \
+                        --country Czech \
+                        --age 24 \
+                        --protocol https \
+                        --sort rate \
+                        --save /etc/pacman.d/mirrorlist
         else
                 sudo apt autoremove -y
         fi

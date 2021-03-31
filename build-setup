@@ -37,7 +37,6 @@ arch_dependencies=(
 	clang
 	curl
 	gcc
-	git
 	gnupg
 	gperf
 	imagemagick
@@ -187,5 +186,3 @@ restore_dotfiles vimrc
 cp -r dotfiles/shell/ ~/.shell/
 
 warning "Now go to your GitHub account and follow these steps: \n1) Settings \n2) SSH and GPG keys \n3) New SSH key \n4) Click on the 'Key' field and press CTRL+V \n5) Click on 'Add SSH key'"
-sleep 10
-warning "The setup is done, please reboot your computer before compiling AOSP first"

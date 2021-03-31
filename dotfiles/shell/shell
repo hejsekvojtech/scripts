@@ -37,5 +37,3 @@ function git_branch_prompt() {
 
 # Colourful shell prompt
 export PS1="${bldcyn}\u${bldwht}@${bldcyn}\h${bldwht}: ${txtblu}\w ${bldgrn}\$(git_branch_prompt)${bldylw}\\$ \[$(tput sgr0)\]${txtrst}"
-
-export LC_ALL=C
