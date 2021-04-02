@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 source common
 
@@ -82,7 +82,7 @@ mka adbd recoveryimage | tee -a ${OUT_LOG}
 if [[ -f ${OUT_PATH}/recovery.img ]]; then
 	mv ${OUT_PATH}/recovery.img compiled/${OUT_RECOVERY_IMAGE}
 	mv ${OUT_LOG} compiled/logs/${OUT_LOG}
-	warning "You did it you son of a bitch, you did it! Go grab it at 'compiled/${OUT_RECOVERY_IMAGE}'!"
+	warning "Done for target ${DEVICE} at 'compiled/${OUT_RECOVERY_IMAGE}'!"
 	
 	if [[ ${ME} =~ "$(whoami)@$(hostname)" ]]; then
 		if [[ ${FTP_UPLOAD} == 'y' ]]; then

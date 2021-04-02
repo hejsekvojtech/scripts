@@ -1,3 +1,0 @@
-for config in $(\ls ~/.shell/); do
-    source ~/.shell/${config}
-done

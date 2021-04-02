@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 source common
 
@@ -19,16 +19,15 @@ else
 fi
 
 # Setup directory structure
-mkdir -p ${MISC} \
-		 ${ANDROID_PATH}
+mkdir -p ${ENV_MISC} \
 
 # Check whether we are running either Debian or Arch based distro
-OS_BASE_DIST=$(cat /etc/*release | grep 'ID_LIKE=' | cut -f2 -d "=" | tr '[:upper:]' '[:lower:]')
-if [[ -z ${OS_BASE_DIST} ]]; then
-	OS_BASE_DIST=$(cat /etc/*release | grep -m 1 'ID=' | cut -f2 -d "=" | tr '[:upper:]' '[:lower:]')
+if [[ $(lsb_release -i -s | tr '[:upper:]' '[:lower:]') == 'arch' ]]; then
+	error "I exclusively use Arch, go away!"
 fi
 
-arch_dependencies=(
+# Arch4Life
+dependencies=(
 	android-tools
 	android-udev
 	base-devel
@@ -49,7 +48,6 @@ arch_dependencies=(
 	ncurses
 	perl-switch
 	pngcrush
-	python2
 	repo
 	rsync
 	schedtool
@@ -61,73 +59,31 @@ arch_dependencies=(
 	xclip
 	zip
 	zlib
-)
-
-debian_dependencies=(
-	android-tools-adb
-	android-tools-fastboot
-	bison
-	build-essential
-	ccache
-	clang
-	flex
-	fontconfig
-	g++-multilib
-	gcc-multilib
-	gnupg
-	imagemagick
-	lib32ncurses-dev
-	lib32z1-dev
-	libc6-dev-i386
-	libgl1-mesa-dev
-	libx11-dev
-	libxml2-utils
-	openjdk-8-jre-headless
-	python2
-	rsync
-	vim
-	x11proto-core-dev
-	xclip
-	xsltproc
-	zip
-	zlib1g-dev
+	zsh
 )
 
 # Configure multilib, makepkg and update before installing our tools
-if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	warning "Configuring multilib"
-	sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-	sudo sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$(nproc --all)\"/g" /etc/makepkg.conf
-	sudo pacman -Syyu --noconfirm || error "Something went wrong while updating packages"
-else
-	sudo apt update && sudo apt dist-upgrade -y || error "Something went wrong while updating packages"
-fi
+warning "Configuring multilib"
+sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+sudo sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$(nproc --all)\"/g" /etc/makepkg.conf
+sudo pacman -Syyu --noconfirm || error "Something went wrong while updating packages"
 
 # Install required dependencies
 warning "Installing required dependencies"
-if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	sudo pacman -S --needed --noconfirm ${arch_dependencies[@]} || error "Error installing dependencies"
-else
-	sudo apt install -y ${debian_dependencies[@]} || error "Error installing dependencies"
-fi
+sudo pacman -S --needed --noconfirm ${dependencies[@]} || error "Error installing dependencies"
 
 # Install AUR dependencies if on Arch
-if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	warning "Installing required dependencies from AUR"
-	gpg --keyserver keys.gnupg.net --recv-keys 702353E0F7E48EDB # This will import missing PGP key
-	yay -S --answerclean A --answerdiff N --needed \
+warning "Installing required dependencies from AUR"
+gpg --keyserver keys.gnupg.net --recv-keys 702353E0F7E48EDB # This will import missing PGP key
+yay -S --answerclean A --answerdiff N --needed \
 	lib32-ncurses5-compat-libs \
 	ncurses5-compat-libs \
 	xml2 || error "Error installing required dependencies from AUR"
-fi
 
 # Cleanup
 warning "Cleaning up"
-if [[ 'arch' == ${OS_BASE_DIST} ]]; then
-	sudo pacman -R --noconfirm $(pacman -Qdtq)
-else
-	sudo apt autoremove -y
-fi
+sudo pacman -Sc --noconfirm
+pacman -Qtdq | sudo pacman -Rns --noconfirm - 2> /dev/null
 
 # Setup Git
 git config --global user.name ${GIT_USER_NAME}
@@ -135,18 +91,6 @@ git config --global user.email ${GIT_USER_MAIL}
 git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 git config --global core.excludesfile ~/.gitignore_global
 git config --global core.editor vim
-
-if [[ 'arch' != ${OS_BASE_DIST} ]]; then
-	mkdir ~/bin
-	PATH=~/bin:$PATH
-	curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-	chmod a+x ~/bin/repo
-fi
-
-# Configure Python for AOSP
-mkdir ~/bin
-ln -s /bin/python2 ~/bin/python
-export PATH=$HOME/bin:$PATH
 
 # Add my rules
 {
@@ -180,9 +124,9 @@ function restore_dotfiles() {
 }
 
 # Restore core configs
-restore_dotfiles bashrc
+restore_dotfiles zshrc
 restore_dotfiles vimrc
 
-cp -r dotfiles/shell/ ~/.shell/
+cp -r dotfiles/zsh/ ~/$ZSH_CONFIG
 
 warning "Now go to your GitHub account and follow these steps: \n1) Settings \n2) SSH and GPG keys \n3) New SSH key \n4) Click on the 'Key' field and press CTRL+V \n5) Click on 'Add SSH key'"

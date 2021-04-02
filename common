@@ -1,24 +1,31 @@
-#!/bin/bash
+#!/bin/zsh
 
-# Terminal colors
-# red = errors, cyan = warnings, green = confirmations, blue = informational
-# plain for generic text, bold for titles, reset flag at each end of line
-# plain blue should not be used for readability reasons - use plain cyan instead
-CLR_RST=$(tput sgr0)                        ## reset flag
-CLR_RED=$CLR_RST$(tput setaf 1)             #  red, plain
-CLR_GRN=$CLR_RST$(tput setaf 2)             #  green, plain
-CLR_BLU=$CLR_RST$(tput setaf 4)             #  blue, plain
-CLR_CYA=$CLR_RST$(tput setaf 6)             #  cyan, plain
-CLR_BLD=$(tput bold)                        ## bold flag
-CLR_BLD_RED=$CLR_RST$CLR_BLD$(tput setaf 1) #  red, bold
-CLR_BLD_GRN=$CLR_RST$CLR_BLD$(tput setaf 2) #  green, bold
-CLR_BLD_BLU=$CLR_RST$CLR_BLD$(tput setaf 4) #  blue, bold
-CLR_BLD_CYA=$CLR_RST$CLR_BLD$(tput setaf 6) #  cyan, bold
+# COLOURS!
+# --------- REGULAR ---------
+txtblk='\[\e[0;30m\]' # Black
+txtred='\[\e[0;31m\]' # Red
+txtgrn='\[\e[0;32m\]' # Green
+txtylw='\[\e[0;33m\]' # Yellow
+txtblu='\[\e[0;34m\]' # Blue
+txtpur='\[\e[0;35m\]' # Purple
+txtcyn='\[\e[0;36m\]' # Cyan
+txtwht='\[\e[0;37m\]' # White
+# --------- BOLD ---------
+bldblk='\[\e[1;30m\]' # Black
+bldred='\[\e[1;31m\]' # Red
+bldgrn='\[\e[1;32m\]' # Green
+bldylw='\[\e[1;33m\]' # Yellow
+bldblu='\[\e[1;34m\]' # Blue
+bldpur='\[\e[1;35m\]' # Purple
+bldcyn='\[\e[1;36m\]' # Cyan
+bldwht='\[\e[1;37m\]' # White
+
+txtrst='\[\e[0m\]'    # Text Reset
 
 # Print the error message, then exit
 function error() {
 	echo ""
-	echo -e "${CLR_BLD_RED}- error: ${@}${CLR_RST}"
+	echo -e "$bldred- error: ${@}$txtrst"
 	echo ""
 	exit 1
 }
@@ -26,14 +33,14 @@ function error() {
 # Print the warning message and continue
 function warning() {
 	echo ""
-	echo -e "${CLR_BLD_CYA}- warning: ${@}${CLR_RST}"
+	echo -e "$bldcya- warning: ${@}$txtrst"
 	echo ""
 }
 
 # Enforces the value needed for two-part flags
 function enforce_value() {
 	if [[ ${#} -lt 1 ]]; then
-		error "An additional value is needed for '${@}' flag!${CLR_RST}"
+		error "An additional value is needed for '${@}' flag!"
 	fi
 }
 
@@ -48,7 +55,7 @@ function check_gcc() {
 function check_clang() {
 	if [[ ! -d ${PREBUILT_CLANG} ]]; then
 		warning "The Clang compiler isn't cloned yet! Cloning now..."
-		git -C ${ROOT_PATH} clone --single-branch https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/ ${PREBUILT_CLANG} || "Git clone failed!"
+		git -C ${ENV_ANDROID} clone --single-branch https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/ ${PREBUILT_CLANG} || "Git clone failed!"
 	else
 		warning "Updating repository to its remote HEAD state"
 		git -C ${PREBUILT_CLANG} fetch origin master || error "Failed to fetch commits from origin!"
@@ -64,8 +71,8 @@ function check_clang() {
 }
 
 function ftp_upload_check() {
-	if [[ ${FTP_UPLOAD} == 'y' ]] && [[ -f ${ROOT_PATH}/ftp-afh ]]; then
-		source ${ROOT_PATH}/ftp-afh
+	if [[ ${FTP_UPLOAD} == 'y' ]] && [[ -f ${ENV_ANDROID}/ftp-afh ]]; then
+		source ${ENV_ANDROID}/ftp-afh
 	else
 		FTP_UPLOAD=n
 	fi
@@ -76,28 +83,22 @@ function abort() {
 	error "Process terminated by user!"
 }
 
-# Initialize environment entrypoints
-ROOT_PATH=~/android
-MISC=${ROOT_PATH}/misc
-
 # Initialize sources
-AK3_SOURCE=${ROOT_PATH}/AnyKernel3
-TWRP_SOURCE=${ROOT_PATH}/TWRP
+AK3_SOURCE=${ENV_ANDROID}/AnyKernel3
+TWRP_SOURCE=${ENV_ANDROID}/TWRP
 
 # Initialize prebuilts
-PREBUILT_GCC=${ROOT_PATH}/prebuilt-gcc
-PREBUILT_CLANG=${ROOT_PATH}/prebuilt-clang
+PREBUILT_GCC=${ENV_ANDROID}/prebuilt-gcc
+PREBUILT_CLANG=${ENV_ANDROID}/prebuilt-clang
 
 # That's me
 ME=(
 	"khaos@zeniac",
-	"khaos@zenpad"
+	"khaos@zenpad",
+	"khaos@shintel"
 )
 
 # Handle terminating the process by pressing CTRL+C with a function
 trap abort INT
 
-# Recreate directory structure if missing
-if [[ ! -d '${ROOT_PATH}' ]]; then
-	mkdir -p ${MISC}
-fi
+mkdir -p $ENV_MISC 2>/dev/null

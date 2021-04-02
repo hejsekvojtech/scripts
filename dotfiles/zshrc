@@ -1,0 +1,24 @@
+source $HOME/.config/zsh/environment.zsh
+source $ZSH_CONFIG/functions.zsh
+source $ZSH_CONFIG/aliases.zsh
+
+# History caching
+HISTFILE=~/.config/zsh/.zshhist
+HISTSIZE=1000
+SAVEHIST=1000
+
+setopt extendedglob nomatch
+
+# Disable beep on syntax error
+unsetopt autocd beep notify
+
+# Vi key bindings
+bindkey -v
+
+zstyle :compinstall filename '/home/khaos/.zshrc'
+
+autoload -Uz compinit
+compinit
+
+# Load plugins
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
