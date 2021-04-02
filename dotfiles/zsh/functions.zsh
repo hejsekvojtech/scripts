@@ -5,7 +5,7 @@ function md() {
 # Print the error message, then exit
 function error() {
 	echo ""
-	echo "- error: ${@}"
+	echo -e "$fg[red]- error: ${@}$reset_color"
 	echo ""
 	exit 1
 }
@@ -13,7 +13,7 @@ function error() {
 # Print the warning message and continue
 function warning() {
 	echo ""
-	echo "- warning: ${@}"
+	echo -e "$fg[green]- warning: ${@}$reset_color"
 	echo ""
 }
 
