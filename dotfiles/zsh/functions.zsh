@@ -2,6 +2,21 @@ function md() {
     mkdir ${1} && cd ${1}
 }
 
+# Print the error message, then exit
+function error() {
+	echo ""
+	echo "- error: ${@}"
+	echo ""
+	exit 1
+}
+
+# Print the warning message and continue
+function warning() {
+	echo ""
+	echo "- warning: ${@}"
+	echo ""
+}
+
 # YAY FTW!
 function cleanup() {
     sudo pacman -Sc --noconfirm

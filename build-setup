@@ -60,6 +60,8 @@ dependencies=(
 	zip
 	zlib
 	zsh
+	zsh-completions
+	zsh-syntax-highlighting
 )
 
 # Configure multilib, makepkg and update before installing our tools
@@ -122,6 +124,9 @@ function restore_dotfiles() {
 	warning "Restoring .${1}"
 	cat dotfiles/${1} >> ~/.${1}
 }
+
+# Oh My ZSH
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Restore core configs
 restore_dotfiles zshrc
