@@ -13,7 +13,7 @@ function error() {
 # Print the warning message and continue
 function warning() {
 	echo ""
-	echo -e "$fg[green]- warning: ${@}$reset_color"
+	echo -e "$fg[blue]- warning: ${@}$reset_color"
 	echo ""
 }
 
