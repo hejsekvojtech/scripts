@@ -1,20 +1,5 @@
 #!/bin/zsh
 
-# Print the error message, then exit
-function error() {
-	echo ""
-	echo -e "$fg[red]- error: ${@}$reset_color"
-	echo ""
-	exit 1
-}
-
-# Print the warning message and continue
-function warning() {
-	echo ""
-	echo -e "$fg[green]- warning: ${@}$reset_color"
-	echo ""
-}
-
 # Enforces the value needed for two-part flags
 function enforce_value() {
 	if [[ ${#} -lt 1 ]]; then

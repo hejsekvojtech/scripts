@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source common
-
 # Count input arguments
 if [[ "$#" -lt '2' ]]; then
 	error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
@@ -87,6 +85,21 @@ warning "Cleaning up"
 sudo pacman -Sc --noconfirm
 pacman -Qtdq | sudo pacman -Rns --noconfirm - 2> /dev/null
 
+# Oh My ZSH
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+sed -i 's/robbyrussell/agnoster/' $HOME/.zshrc
+
+function restore_dotfiles() {
+	warning "Restoring .${1}"
+	cat dotfiles/${1} >> ~/.${1}
+}
+
+# Restore core configs
+restore_dotfiles zshrc
+restore_dotfiles vimrc
+
+cp -r dotfiles/zsh/ ~/$HOME/.config/
+
 # Setup Git
 git config --global user.name ${GIT_USER_NAME}
 git config --global user.email ${GIT_USER_MAIL}
@@ -119,19 +132,5 @@ else
 	ssh-add ~/.ssh/id_rsa
 	xclip -sel clip < ~/.ssh/id_rsa.pub
 fi
-
-function restore_dotfiles() {
-	warning "Restoring .${1}"
-	cat dotfiles/${1} >> ~/.${1}
-}
-
-# Oh My ZSH
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-# Restore core configs
-restore_dotfiles zshrc
-restore_dotfiles vimrc
-
-cp -r dotfiles/zsh/ ~/$HOME/.config/
 
 warning "Now go to your GitHub account and follow these steps: \n1) Settings \n2) SSH and GPG keys \n3) New SSH key \n4) Click on the 'Key' field and press CTRL+V \n5) Click on 'Add SSH key'"
