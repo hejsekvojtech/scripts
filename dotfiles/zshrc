@@ -1,11 +1,6 @@
-source $HOME/.config/zsh/environment.zsh
-source $ZSH_CONFIG/functions.zsh
-source $ZSH_CONFIG/aliases.zsh
-
-# History caching
-HISTFILE=~/.config/zsh/.zshhist
-HISTSIZE=1000
-SAVEHIST=1000
+source $HOME/.local/share/zsh/environment.zsh
+source $HOME/.local/share/zsh/functions.zsh
+source $HOME/.local/share/zsh/aliases.zsh
 
 setopt extendedglob nomatch
 

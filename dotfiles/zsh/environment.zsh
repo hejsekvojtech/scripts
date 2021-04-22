@@ -1,5 +1,4 @@
-export ZSH_CONFIG=$HOME/.config/zsh
-export ZSH_CACHE=$ZSH_CONFIG/.zshhist
+export ZSH_CONFIG=$HOME/.local/share/zsh
 
 # Custom date format
 export DATE=$(date +%Y-%m-%d)
@@ -17,3 +16,11 @@ export ENV_MISC=${ENV_ANDROID}/misc
 export PATH=/usr/local/sbin:$PATH
 export PATH=$HOME/.local/bin:$PATH
 export PATH=$HOME/.local/sbin:$PATH
+
+# Terminal history
+export HISTFILE=$ZSH_CONFIG/.zsh_hist
+export HISTSIZE=100000
+export HISTFILESIZE=2000000
+
+# UI
+export TERM=xterm-256color

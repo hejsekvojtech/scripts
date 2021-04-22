@@ -1,5 +1,8 @@
 #!/bin/bash
 
+source dotfiles/zsh/environment.zsh
+source dotfiles/zsh/functions.zsh
+
 # Count input arguments
 if [[ "$#" -lt '2' ]]; then
 	error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
@@ -20,7 +23,7 @@ fi
 mkdir -p ${ENV_MISC} \
 
 # Check whether we are running either Debian or Arch based distro
-if [[ $(lsb_release -i -s | tr '[:upper:]' '[:lower:]') == 'arch' ]]; then
+if [[ $(lsb_release -i -s | tr '[:upper:]' '[:lower:]') != 'arch' ]]; then
 	error "I exclusively use Arch, go away!"
 fi
 
@@ -46,6 +49,7 @@ dependencies=(
 	ncurses
 	perl-switch
 	pngcrush
+	reflector
 	repo
 	rsync
 	schedtool
@@ -98,7 +102,7 @@ function restore_dotfiles() {
 restore_dotfiles zshrc
 restore_dotfiles vimrc
 
-cp -r dotfiles/zsh/ ~/$HOME/.config/
+cp -r dotfiles/zsh/ $ZSH_CONFIG
 
 # Setup Git
 git config --global user.name ${GIT_USER_NAME}
