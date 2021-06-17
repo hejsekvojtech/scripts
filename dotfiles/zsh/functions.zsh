@@ -20,15 +20,16 @@ function warning() {
 # YAY FTW!
 function cleanup() {
     sudo pacman -Sc --noconfirm
-    pacman -Qtdq | sudo pacman -Rns - 2>/dev/null
-        sudo reflector \
-            --download-timeout 30 \
-            --country France \
-            --country Czech \
-            --age 24 \
-            --protocol https \
-            --sort rate \
-            --save /etc/pacman.d/mirrorlist
+    pacman -Qtdq | sudo pacman -Rns --noconfirm  - 2>/dev/null
+    warning "Updating pacman mirrors..."
+    sudo reflector \
+        --download-timeout 30 \
+        --country France \
+        --country Czech \
+        --age 24 \
+        --protocol https \
+        --sort rate \
+        --save /etc/pacman.d/mirrorlist
 }
 
 function install() {
