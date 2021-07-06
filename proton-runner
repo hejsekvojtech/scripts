@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Game specific
+# $EXEC - executable name
+# $EXEC_PATH - executable path relative to game root
+# $PROTON - proton version
+
+# Environment
+export STEAM_COMPAT_DATA_PATH=$PWD/prefix # Proton prefix location
+export STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam/root # Steam root directory, may vary in rare cases
+export WINEDLLOVERRIDES="" # Dll overrides, mostly unnecessary
+export WINEFSYNC=1 # If you have fsync compatible kernel
+#export WINEESYNC=1 # Default
+
+# Fixes
+#export PULSE_LATENCY_MSEC=60
+#export WINE_LARGE_ADDRESS_AWARE=1
+
+# Proton should be located in one of those
+for path in 'compatibilitytools.d' 'steamapps/common'; do
+    echo "Searching $STEAM_COMPAT_CLIENT_INSTALL_PATH/$path..."
+    if [[ -d $STEAM_COMPAT_CLIENT_INSTALL_PATH/$path/$PROTON ]]; then
+        echo "Found it!"
+        PROTON_PATH=$STEAM_COMPAT_CLIENT_INSTALL_PATH/$path/$PROTON
+        break
+    fi
+done
+
+# Bail out, nothing to see here
+if [[ -z $PROTON_PATH ]]; then
+    echo "Proton '$PROTON' not found!"
+    exit
+else
+    # Patch proton to not require steam to be running
+    if [[ ! -f "$PROTON_PATH/proton-nosteam" ]]; then
+        cp "$PROTON_PATH/proton" "$PROTON_PATH/proton-nosteam" 
+        sed -i 's/, "steam"//g' "$PROTON_PATH/proton-nosteam"
+    fi
+    if [[ ! -d "$STEAM_COMPAT_DATA_PATH" ]]; then
+        echo "Creating prefix directory"
+        mkdir -p "$STEAM_COMPAT_DATA_PATH"
+    fi
+    cd "$EXEC_PATH"
+    if [[ -x /usr/bin/gamemoderun ]]; then
+        echo "Executing with 'gamemoderun'"
+        gamemoderun "$PROTON_PATH/proton-nosteam" run $EXEC $@
+    else
+        "$PROTON_PATH/proton-nosteam" run $EXEC $@
+    fi
+fi

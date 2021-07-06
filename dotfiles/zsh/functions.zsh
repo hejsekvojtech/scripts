@@ -124,7 +124,7 @@ function sync-rc() {
         \cp -urf $ZSH_CONFIG/* ${ENV_SCRIPTS}/dotfiles/zsh/
         git -C ${ENV_SCRIPTS} add .
         git -C ${ENV_SCRIPTS} commit -s -m "scripts: Sync config as of $DATE"
-        git -C ${ENV_SCRIPTS} push origin master
+        git -C ${ENV_SCRIPTS} push origin master || git pull origin && sync-rc
     else
         git clone https://github.com/hejsekvojtech/scripts.git -b master ${ENV_SCRIPTS}
         sync-rc
