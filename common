@@ -2,7 +2,7 @@
 
 # Enforces the value needed for two-part flags
 function enforce_value() {
-	if [[ ${#} -lt 1 ]]; then
+	if [ ${#} -lt 1 ]; then
 		error "An additional value is needed for '${@}' flag!"
 	fi
 }

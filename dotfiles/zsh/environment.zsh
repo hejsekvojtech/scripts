@@ -21,6 +21,3 @@ export HISTFILESIZE=2000000
 
 # UI
 export TERM=xterm-256color
-
-# Locale
-export LC_ALL=C

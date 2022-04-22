@@ -32,17 +32,12 @@ function update-mirrorlist() {
         --country Czech \
         --age 24 \
         --protocol https \
-        --sort rate \
+        --sort rate 2>/dev/null
 }
 
 function install() {
-    if [[ ${1} == '-p' ]]; then
-        warning "Using pacman backend"
-        shift
-        sudo pacman -S --noconfirm ${@}
-    else
-        yay -S --noconfirm ${@}
-    fi
+
+    sudo pacman -S --noconfirm ${@}
 }
 
 function nuke() {
@@ -54,7 +49,7 @@ function nuke-common() {
 }
 
 function upgrade() {
-    yay -Syyu --noconfirm --nodiffmenu
+    sudo pacman -Syyu --noconfirm --nodiffmenu
 }
 
 # Extract it!
@@ -95,21 +90,5 @@ function extract () {
                 echo "'$1' cannot be extracted via extract()"
                 ;;
         esac
-    fi
-}
-
-# Housekeeping
-function sync-rc() {
-    warning "Syncing scripts and configs..."
-    if [[ -d ${ENV_SCRIPTS} ]]; then
-        \cp -urf $ZSH_CONFIG/* ${ENV_SCRIPTS}/dotfiles/zsh/
-        \cp -urf ~/.zshrc ${ENV_SCRIPTS}/dotfiles/
-        \cp -urf ~/.vimrc ${ENV_SCRIPTS}/dotfiles/
-        git -C ${ENV_SCRIPTS} add .
-        git -C ${ENV_SCRIPTS} commit -s -m "scripts: Sync config as of $DATE"
-        git -C ${ENV_SCRIPTS} push origin master || $(grh && sync-rc)
-    else
-        git clone https://github.com/hejsekvojtech/scripts.git -b master ${ENV_SCRIPTS}
-        sync-rc
     fi
 }

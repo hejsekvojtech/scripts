@@ -47,8 +47,6 @@ packages=(
 	docker
 	gamemode
 	gcc
-	libreoffice-fresh
-	libreoffice-fresh-cs
 	neofetch
 	reflector
 	rsync
@@ -56,6 +54,7 @@ packages=(
 	wine-staging
 	zip
 	zsh
+	zsh-autosuggestions
 	zsh-completions
 	zsh-syntax-highlighting
 )
