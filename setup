@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source dotfiles/zsh/environment.zsh
+source dotfiles/zsh/functions.zsh
 
 function error() {
 	echo ""
@@ -42,7 +43,6 @@ packages=(
 	android-udev
 	base-devel
 	clang
-	code
 	curl
 	docker
 	gamemode
@@ -50,8 +50,6 @@ packages=(
 	neofetch
 	reflector
 	rsync
-	unzip
-	wine-staging
 	zip
 	zsh
 	zsh-autosuggestions
@@ -105,21 +103,11 @@ cp -r dotfiles/zsh/ $ZSH_CONFIG
 
 if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
 	# Setup Git
-	git config --global user.name ${GIT_USER_NAME}
+	git config --global user.name "${GIT_USER_NAME}"
 	git config --global user.email ${GIT_USER_MAIL}
 	git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 	git config --global core.excludesfile ~/.gitignore_global
 	git config --global core.editor vim
 
-	# Generate SSH keys
-	if [[ -f ~/.ssh/id_rsa.pub ]]; then
-		warning "SSH key found!"
-	else
-		warning "Generating a new SSH key"
-		ssh-keygen -t rsa -b 4096 -C "${GIT_USER_MAIL}" -P "" -f ~/.ssh/id_rsa -q
-		
-	fi
-	warning "SSH key has been generated!"
-	eval "$(ssh-agent -s)"
-	ssh-add ~/.ssh/id_rsa
+	addSSHIdentity $GIT_USER_MAIL personal
 fi

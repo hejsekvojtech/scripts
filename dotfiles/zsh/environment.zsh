@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 export ZSH_CONFIG=$HOME/.local/share/zsh
 
 # Custom date format

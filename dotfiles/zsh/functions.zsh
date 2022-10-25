@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 function mdc() {
     mkdir ${1} && cd ${1}
 }
@@ -50,6 +52,21 @@ function nuke-common() {
 
 function upgrade() {
     sudo pacman -Syyu --noconfirm --nodiffmenu
+}
+
+function addSSHIdentity() {
+	IDENTITY_NAME=$2
+	EMAIL=$1
+	[[ -z $EMAIL || -z $IDENTITY_NAME ]] && exit
+	if [[ -f ~/.ssh/id_rsa_${IDENTITY_NAME}.pub ]]; then
+		warning "SSH key found!"
+	else
+		warning "Generating a new SSH key"
+		ssh-keygen -t rsa -b 4096 -C "${EMAIL}" -P "" -f ~/.ssh/id_rsa_${IDENTITY_NAME} -q
+	fi
+	warning "SSH key has been generated!"
+	eval "$(ssh-agent -s)"
+	ssh-add ~/.ssh/id_rsa_$IDENTITY_NAME
 }
 
 # Extract it!
