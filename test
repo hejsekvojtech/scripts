@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for conf in etc/*/**; do
-    echo $conf
-done
