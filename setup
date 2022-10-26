@@ -43,13 +43,13 @@ packages=(
 	android-udev
 	base-devel
 	clang
-	curl
 	docker
 	gamemode
 	gcc
 	neofetch
 	reflector
 	rsync
+	unzip
 	zip
 	zsh
 	zsh-autosuggestions
@@ -87,6 +87,11 @@ restore_dotfiles vimrc
 
 cp -r dotfiles/zsh/ $ZSH_CONFIG
 
+# modprobe.d configs
+for conf in etc/*/**; do
+	sudo cp $conf /$conf
+done
+
 # Add my rules
 {
 	echo "out/"
@@ -111,3 +116,5 @@ if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
 
 	addSSHIdentity $GIT_USER_MAIL personal
 fi
+
+[[ $? == 0 ]] && echo "Done! You can now reboot" || echo "The setup ended with errors!"
