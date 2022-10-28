@@ -12,6 +12,11 @@ alias mv='mv -i'
 alias make='clear && make'
 alias m='make'
 
+# Life improvements
+alias yearofdesktoplinux='echo "$(( $(date +%Y)+1 )) will be the year of desktop Linux"'
+alias cls='clear'
+alias nukehist='echo "" > $HISTFILE'
+
 # Git
 alias gpo='git push origin'
 alias gp='git push'
