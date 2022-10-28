@@ -24,6 +24,8 @@ function cleanup() {
     warning "Removing redundant packages"
     sudo pacman -Sc --noconfirm
     pacman -Qtdq | sudo pacman -Rns --noconfirm  - 2>/dev/null
+    # The command above returns 1 if there are no packages to purge, always return 0
+    return 0
 }
 
 function update-mirrorlist() {
@@ -51,7 +53,7 @@ function nuke-common() {
 }
 
 function upgrade() {
-    sudo pacman -Syyu --noconfirm --nodiffmenu
+    sudo pacman -Syu --noconfirm --nodiffmenu
 }
 
 function addSSHIdentity() {
