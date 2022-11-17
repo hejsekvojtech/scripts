@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 # Files
 alias md='mkdir -p'
 alias ls='ls --sort=extension --color=auto'

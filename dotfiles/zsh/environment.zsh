@@ -11,6 +11,9 @@ export EDITOR=/usr/bin/vim
 # Workspace
 export ENV_SCRIPTS=$HOME/scripts
 
+# NPM user prefix
+export npm_config_prefix="$HOME/.local"
+
 # Executables
 export PATH=/usr/local/sbin:$PATH
 export PATH=$HOME/.local/bin:$PATH

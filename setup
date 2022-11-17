@@ -24,7 +24,7 @@ if [[ $# != 0 ]]; then
 			if [[ ${arg} =~ '@' ]]; then
 				GIT_USER_MAIL=${arg}
 			else
-				GIT_USER_NAME=${arg}
+				GIT_USER_NAME="${arg}"
 			fi
 		done
 	else
@@ -46,6 +46,7 @@ packages=(
 	docker
 	gcc
 	neofetch
+	npm
 	reflector
 	rsync
 	unzip
