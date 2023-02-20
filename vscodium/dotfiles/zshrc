@@ -1,0 +1,21 @@
+
+source $HOME/.local/share/zsh/environment.zsh
+source $HOME/.local/share/zsh/aliases.zsh
+source $HOME/.local/share/zsh/functions.zsh
+
+# Set options
+setopt extendedglob nocaseglob nomatch numericglobsort appendhistory
+
+# Unset options
+unsetopt autocd beep notify
+
+# Vi key bindings
+bindkey -v
+
+# Autocompletion
+autoload -Uz compinit colors
+compinit
+
+# Load plugins
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null

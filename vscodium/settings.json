@@ -1,0 +1,51 @@
+{
+  // Security
+  "security.workspace.trust.banner": "never",
+  "security.workspace.trust.startupPrompt": "never",
+  "security.workspace.trust.enabled": false,
+
+  // Explorer
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDelete": false,
+
+  // Workbench
+  "workbench.colorTheme": "Monokai Night",
+  "workbench.iconTheme": "eq-material-theme-icons-light",
+  "workbench.startupEditor": "none",
+
+  // Misc
+  "editor.inlineSuggest.enabled": true,
+  "extensions.ignoreRecommendations": true,
+
+  // Integrated Terminal
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.fontFamily": "'Source Code Pro'",
+
+  // Editor Fonts
+  "editor.fontFamily": "'IBM Plex Mono'",
+  "editor.fontSize": 15,
+  "editor.fontLigatures": true,
+
+  // Formatting
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": false,
+  "editor.tabSize": 4,
+  "editor.formatOnSave": true,
+
+  // Formatters
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "DotJoshJohnson.xml"
+  },
+
+  // Java
+  "java.project.outputPath": "build",
+
+  // JavaScript / TypeScript
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.updateImportsOnFileMove.enabled": "always"
+}

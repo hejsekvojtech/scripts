@@ -1,0 +1,22 @@
+#!/bin/zsh
+
+# Enforces the value needed for two-part flags
+function enforce_value() {
+	if [ ${#} -lt 1 ]; then
+		error "An additional value is needed for '${@}' flag!"
+	fi
+}
+
+function abort() {
+	rm -rf out
+	error "Process terminated by user!"
+}
+
+# That's me
+ME=(
+	"khaos@zeniac",
+	"khaos@hades",
+)
+
+# Handle terminating the process by pressing CTRL+C with a function
+trap abort INT
