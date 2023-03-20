@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Files
 alias md='mkdir -p'
 alias ls='ls --sort=extension --color=auto'
@@ -16,7 +18,7 @@ alias m='make'
 alias yearofdesktoplinux='echo "$(( $(date +%Y)+1 )) will be the year of desktop Linux"'
 alias cls='clear'
 alias nukehist='echo "" > $HISTFILE'
-alias perun='ssh vojtech.hejsek@perun.nti.tul.cz'
+alias fixencoding='iconv -f WINDOWS-1250 -t UTF-8'
 
 # Git
 alias gpo='git push origin'

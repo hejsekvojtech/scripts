@@ -121,6 +121,7 @@ if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
 	git config --global core.editor vim
 
 	addSSHIdentity personal
+	cat ssh/config >> $HOME/.ssh/config
 fi
 
 [[ $? == 0 ]] && echo "Done! You can now reboot" || echo "The setup ended with errors!"
