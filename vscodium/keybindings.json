@@ -1,11 +1,7 @@
 // Place your key bindings in this file to override the defaultsauto[]
 [
-    {
-        "key": "ctrl+shift+t",
-        "command": "-workbench.action.reopenClosedEditor"
-    },
-    {
-        "key": "ctrl+shift+t",
-        "command": "workbench.action.terminal.new"
-    }
+  {
+    "key": "ctrl+shift+[BracketRight]",
+    "command": "workbench.action.terminal.toggleTerminal"
+  }
 ]
