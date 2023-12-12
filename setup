@@ -1,127 +1,186 @@
 #!/bin/bash
 
+if [[ $EUID -ne 0 ]]; then
+    error "The script needs to be executed with sudo (sudo ./setup)"
+fi
+
+# Make sure we work with current user, not root
+USER=$SUDO_USER
+HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+
 source dotfiles/zsh/environment.zsh
 source dotfiles/zsh/functions.zsh
 
 function error() {
-	echo ""
-	echo -e "- error: ${@}"
-	echo ""
-	exit 1
+    echo ""
+    echo -e "- error: ${@}"
+    echo ""
+    exit 1
 }
 
 # Print the warning message and continue
 function warning() {
-	echo ""
-	echo -e "- warning: ${@}"
-	echo ""
+    echo ""
+    echo -e "- warning: ${@}"
+    echo ""
+}
+
+function restore_dotfiles() {
+    warning "Restoring .${1}"
+    cat dotfiles/${1} >> $HOME/.${1}
 }
 
 # Count input arguments
 if [[ $# != 0 ]]; then
-	if [[ $# == 2 ]]; then
-		for arg in ${@}; do
-			if [[ ${arg} =~ '@' ]]; then
-				GIT_USER_MAIL=${arg}
-			else
-				GIT_USER_NAME="${arg}"
-			fi
-		done
-	else
-		error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
-	fi
+    if [[ $# == 2 ]]; then
+        for arg in ${@}; do
+            if [[ ${arg} =~ '@' ]]; then
+                GIT_USER_MAIL=${arg}
+            else
+                GIT_USER_NAME="${arg}"
+            fi
+        done
+    else
+        error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
+    fi
 fi
 
-# Check whether we are running either Debian or Arch based distro
-if [[ $(lsb_release -i -s | tr '[:upper:]' '[:lower:]') != 'arch' ]]; then
-	error "I exclusively use Arch, go away!"
+DISTRO=$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')
+warning "Your are running $DISTRO based distro"
+if [[ $DISTRO != 'arch' && $DISTRO != 'fedora' ]]; then
+    error "Unsupported distro, this script only supports Arch Linux and Fedora"
 fi
 
-# Arch4Life
-packages=(
-	android-tools
-	android-udev
-	base-devel
-	clang
-	docker
-	gcc
-	neofetch
-	npm
-	reflector
-	rsync
-	unzip
-	zip
-	zsh
-	zsh-autosuggestions
-	zsh-completions
-	zsh-syntax-highlighting
+PKG_INSTALL_CMD=$([[ $DISTRO == "arch" ]] && echo "pacman -Syu --needed --noconfirm" || echo "dnf install -y")
+
+common_pkgs=(
+    android-tools
+    clang
+    gcc
+    neofetch
+    npm
+    vim
+    zsh
 )
 
-# Configure multilib, makepkg and update before installing our tools
-warning "Configuring multilib"
-sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sudo sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$(nproc --all)\"/g" /etc/makepkg.conf
-sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
+arch_pkgs=(
+    android-udev
+    base-devel
+    docker
+    docker-compose
+    reflector
+    rsync
+    ttf-ibm-plex
+    unzip
+    zip
+)
+
+fedora_pkgs=(
+    dnf-plugins-core
+    ibm-plex-mono-fonts
+)
+
+fedora_docker_pkgs=(
+    docker-ce
+    docker-ce-cli
+    containerd.io
+)
+
+zsh_modules=(
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+if [[ $DISTRO == "arch" ]]; then
+    warning "Enabling multilib repo"
+    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+    sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
+    
+    if [ ! -z $(command -v yay) ]; then
+        yay -S --answerclean A --answerdiff N --save vscodium-{bin,bin-marketplace}
+    fi
+fi
 
 # Install required packages
 warning "Installing required packages"
-sudo pacman -S --needed --noconfirm ${packages[@]} || error "Error installing packages"
+sudo $PKG_INSTALL_CMD ${common_pkgs[@]} ${packages[@]} || error "Error while installing packages"
 
-if [ ! -z $(command -v yay) ]; then
-	yay -S --answerclean A --answerdiff N --save vscodium-bin{"", -features, -marketplace}
+if [[ $DISTRO == "fedora" ]]; then
+    warning "Adding Fedora Docker repo"
+    sudo dnf config-manager --assumeyes --add-repo https://download.docker.com/linux/fedora/docker-ce.repo \
+    && $PKG_INSTALL_CMD ${fedora_docker_pkgs[@]} \
+    || warning "Failed to install Docker, please return to this step later"
 fi
 
-# Cleanup
-warning "Cleaning up"
-sudo pacman -Sc --noconfirm
-pacman -Qtdq | sudo pacman -Rns --noconfirm - 2> /dev/null
+if [[ -z $(getent group docker) ]]; then
+    sudo groupadd docker
+fi
+
+if [[ ! -z $(command -v docker) ]]; then
+    warning "Adding user ${USER} to docker group"
+    if [[ -z $(id -nG "$USER" | grep docker) ]]; then
+        sudo gpasswd -a ${USER} docker
+    fi
+    
+    warning "Enabling Docker service on init"
+    sudo systemctl enable --now docker.service
+fi
 
 # Oh My ZSH
+warning "Installing OhMyZsh"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 sed -i 's/robbyrussell/agnoster/' $HOME/.zshrc
 
-function restore_dotfiles() {
-	warning "Restoring .${1}"
-	cat dotfiles/${1} >> ~/.${1}
-}
+# Clone some ZSH modules
+for module in ${zsh_modules[@]}; do
+    git clone https://github.com/zsh-users/${module}.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/${module}
+    sed -i "/^plugins=/ s/)/ $module)/" $HOME/.zshrc
+done
 
 # Restore core configs
 restore_dotfiles zshrc
 restore_dotfiles vimrc
 
+# Only load helpers for running distro
+sed -i "s/=DISTRO=/$DISTRO/" $HOME/.zshrc
+
 cp -r dotfiles/zsh/ $ZSH_CONFIG
 
 # VSCodium config
-cp -f vscodium/* ~/.config/VSCodium/User/
+warning "Configuring VSCodium"
+mkdir -p $HOME/.config/VSCodium/User
+cp -f dotfiles/vscodium/* $HOME/.config/VSCodium/User/
 
-# modprobe.d configs
+# System-wide configs
+warning "Copying system configurations"
 for conf in etc/*/**; do
-	sudo cp $conf /$conf
+    sudo cp $conf /$conf
 done
 
-# Add my rules
+if [[ $DISTRO == "fedora" ]]; then
+    warning "Copying docker-compose wrapper for Fedora"
+    sudo cp bin/docker-compose
+    sudo chmod +x /bin/docker-compose
+fi
+
+# My custom gitignore rules
 {
-	echo "out/"
-	echo "*.ko"
-	echo "Image.*"
-	echo "zImage*"
-	echo "dtbo*"
-	echo "net/wireguard"
-	echo "*.rej"
-	echo ".DS_Store"
-	echo ".DS_Store?"
-	echo "*.log"
-} >> ~/.gitignore_global
+    echo "out/"
+    echo "*.rej"
+    echo ".DS_Store"
+    echo ".DS_Store?"
+    echo "*.log"
+} >> $HOME/.gitignore_global
 
 if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
-	# Setup Git
-	git config --global user.name "${GIT_USER_NAME}"
-	git config --global user.email ${GIT_USER_MAIL}
-	git config --global core.excludesfile ~/.gitignore_global
-	git config --global core.editor vim
-
-	addSSHIdentity personal
-	cat ssh/config >> $HOME/.ssh/config
+    # Setup Git
+    git config --global user.name "${GIT_USER_NAME}"
+    git config --global user.email "${GIT_USER_MAIL}"
+    git config --global core.excludesfile $HOME/.gitignore_global
+    git config --global core.editor vim
 fi
+
+addSSHIdentity personal
+cat dotfiles/ssh/config >> $HOME/.ssh/config
 
 [[ $? == 0 ]] && echo "Done! You can now reboot" || echo "The setup ended with errors!"

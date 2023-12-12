@@ -9,13 +9,13 @@
     "explorer.confirmDelete": false,
 
     // Workbench
-    "workbench.colorTheme": "Monokai Night",
-    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Gruvbox Dark Hard",
     "workbench.startupEditor": "none",
 
     // Misc
     "editor.inlineSuggest.enabled": true,
     "extensions.ignoreRecommendations": true,
+    "window.titleBarStyle": "custom",
 
     // Integrated Terminal
     "terminal.integrated.enableMultiLinePasteWarning": false,
@@ -24,7 +24,7 @@
 
     // Editor Fonts
     "editor.fontFamily": "'IBM Plex Mono'",
-    "editor.fontSize": 15,
+    "editor.fontSize": 16,
     "editor.fontLigatures": true,
 
     // Formatting
@@ -35,29 +35,33 @@
 
     // Formatters
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "[java]": {
-        "editor.defaultFormatter": "redhat.java"
-    },
     "[xml]": {
-        "editor.defaultFormatter": "DotJoshJohnson.xml"
+        "editor.defaultFormatter": "redhat.vscode-xml"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python"
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "shakram02.bash-beautify"
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
     },
 
-    // Java
-    "java.project.outputPath": "build",
+    // Prettier
+    "prettier.tabWidth": 4,
 
     // JavaScript / TypeScript
     "javascript.updateImportsOnFileMove.enabled": "always",
     "typescript.updateImportsOnFileMove.enabled": "always",
 
-    // Python
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
-    },
-
     // Plugin telemetry
     "redhat.telemetry.enabled": false,
-    "aws.telemetry": false,
-
-    // Prettier
-    "prettier.tabWidth": 4
+    "aws.telemetry": false
 }

@@ -27,5 +27,5 @@ export HISTFILESIZE=2000000
 # UI
 export TERM=xterm-256color
 
-# Wine
+# Disable Wine mono globally
 export WINEDLLOVERRIDES="mshtml,mscoree,winemenubuilder.exe=d"
