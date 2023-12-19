@@ -68,8 +68,10 @@ arch_pkgs=(
     base-devel
     docker
     docker-compose
+    inter-font
     reflector
     rsync
+    ttf-fira-mono
     ttf-ibm-plex
     unzip
     zip
@@ -78,6 +80,8 @@ arch_pkgs=(
 fedora_pkgs=(
     dnf-plugins-core
     ibm-plex-mono-fonts
+    mozilla-fira-mono-fonts
+    rsms-inter-fonts
 )
 
 fedora_docker_pkgs=(
@@ -150,6 +154,10 @@ cp -r dotfiles/zsh/ $ZSH_CONFIG
 warning "Configuring VSCodium"
 mkdir -p $HOME/.config/VSCodium/User
 cp -f dotfiles/vscodium/* $HOME/.config/VSCodium/User/
+
+# User configs
+warning "Restoring user configurations"
+cp -rf dotfiles/config/* $HOME/.config/
 
 # System-wide configs
 warning "Copying system configurations"
