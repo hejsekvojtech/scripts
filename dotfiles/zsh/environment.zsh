@@ -20,7 +20,7 @@ export PATH=$HOME/.local/sbin:$PATH
 export npm_config_prefix="$HOME/.local"
 
 # Terminal history
-export HISTFILE=$ZSH_CONFIG/.zsh_hist
+export HISTFILE=$ZSH_CONFIG/.zsh_history
 export HISTSIZE=100000
 export HISTFILESIZE=2000000
 

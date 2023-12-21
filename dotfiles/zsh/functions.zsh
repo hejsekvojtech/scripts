@@ -21,7 +21,7 @@ function warning() {
 
 function addSSHIdentity() {
     IDENTITY_NAME=$1
-    [[ -z $IDENTITY_NAME ]] && exit 1
+    [[ -z $IDENTITY_NAME ]] && error "No SSH identity name provided"
     
     mkdir -p $HOME/.ssh
     
@@ -29,7 +29,7 @@ function addSSHIdentity() {
         warning "SSH key found!"
     else
         warning "Generating a new SSH key"
-        ssh-keygen -t ed25519 -C "$2" -P "" -f ~/.ssh/id_${IDENTITY_NAME} -q
+        ssh-keygen -t ed25519 -C "$2" -f ~/.ssh/id_${IDENTITY_NAME} -q
     fi
     
     warning "SSH key has been generated!"

@@ -20,8 +20,7 @@ function error() {
 
 # Print the warning message and continue
 function warning() {
-    echo ""
-    echo -e "- warning: ${@}"
+    echo -e "- ${@}"
     echo ""
 }
 
@@ -95,6 +94,25 @@ zsh_modules=(
     zsh-syntax-highlighting
 )
 
+vscodium_extensions=(
+    austin.code-gnu-global
+    eamodio.gitlens
+    esbenp.prettier-vscode
+    miguelsolorio.min-theme
+    ms-azuretools.vscode-docker
+    ms-python.python
+    ms-vscode.cmake-tools
+    ms-vscode.cpptools
+    redhat.vscode-xml
+    rust-lang.rust-analyzer
+    shakram02.bash-beautify
+    tamasfe.even-better-toml
+    twxs.cmake
+    vadimcn.vscode-lldb
+    VisualStudioExptTeam.intellicode-api-usage-examples
+    VisualStudioExptTeam.vscodeintellicode
+)
+
 if [[ $DISTRO == "arch" ]]; then
     warning "Enabling multilib repo"
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -121,7 +139,7 @@ if [[ -z $(getent group docker) ]]; then
 fi
 
 if [[ ! -z $(command -v docker) ]]; then
-    warning "Adding user ${USER} to docker group"
+    warning "Adding user ${USER} to Docker group"
     if [[ -z $(id -nG "$USER" | grep docker) ]]; then
         sudo gpasswd -a ${USER} docker
     fi
@@ -153,7 +171,12 @@ cp -r dotfiles/zsh/ $ZSH_CONFIG
 # VSCodium config
 warning "Configuring VSCodium"
 mkdir -p $HOME/.config/VSCodium/User
-cp -f dotfiles/vscodium/* $HOME/.config/VSCodium/User/
+cp -rf dotfiles/vscodium/* $HOME/.config/VSCodium/
+
+warning "Installing VSCodium extensions"
+for extension in ${vscodium_extensions[@]}; do
+    codium --install-extension ${extension}
+done
 
 # User configs
 warning "Restoring user configurations"
