@@ -1,0 +1,18 @@
+[Added Associations]
+application/x-yaml=codium.desktop;
+inode/directory=org.kde.dolphin.desktop;codium.desktop;org.kde.filelight.desktop;org.kde.gwenview.desktop;
+text/plain=codium.desktop;
+text/x-makefile=codium.desktop;
+
+[Default Applications]
+application/x-yaml=codium.desktop;
+inode/directory=org.kde.dolphin.desktop;
+text/plain=codium.desktop;
+text/x-makefile=codium.desktop;
+x-scheme-handler/jetbrains=jetbrains-toolbox.desktop
+x-scheme-handler/slack=slack.desktop
+
+[Removed Associations]
+application/x-yaml=libreoffice-writer.desktop;okularApplication_txt.desktop;
+text/plain=libreoffice-writer.desktop;okularApplication_txt.desktop;
+text/x-makefile=libreoffice-writer.desktop;okularApplication_txt.desktop;
