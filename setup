@@ -1,13 +1,5 @@
 #!/bin/bash
 
-if [[ $EUID -ne 0 ]]; then
-    error "The script needs to be executed with sudo (sudo ./setup)"
-fi
-
-# Make sure we work with current user, not root
-USER=$SUDO_USER
-HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-
 source dotfiles/zsh/environment.zsh
 source dotfiles/zsh/functions.zsh
 
@@ -28,6 +20,14 @@ function restore_dotfiles() {
     warning "Restoring .${1}"
     cat dotfiles/${1} >> $HOME/.${1}
 }
+
+# if [[ $EUID -ne 0 ]]; then
+#     error "The script needs to be executed with sudo (sudo ./setup)"
+# fi
+
+# # Make sure we work with current user, not root
+# USER=$SUDO_USER
+# HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 
 # Count input arguments
 if [[ $# != 0 ]]; then
@@ -117,15 +117,16 @@ if [[ $DISTRO == "arch" ]]; then
     warning "Enabling multilib repo"
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
-    
-    if [ ! -z $(command -v yay) ]; then
-        yay -S --answerclean A --answerdiff N --save vscodium-{bin,bin-marketplace}
-    fi
 fi
 
 # Install required packages
 warning "Installing required packages"
 sudo $PKG_INSTALL_CMD ${common_pkgs[@]} ${packages[@]} || error "Error while installing packages"
+
+if [ ! -z $(command -v yay) ]; then
+    warning "Installing VSCodium from AUR"
+    yay -S --answerclean A --answerdiff N --save vscodium-{bin,bin-marketplace}
+fi
 
 if [[ $DISTRO == "fedora" ]]; then
     warning "Adding Fedora Docker repo"
@@ -134,12 +135,12 @@ if [[ $DISTRO == "fedora" ]]; then
     || warning "Failed to install Docker, please return to this step later"
 fi
 
-if [[ -z $(getent group docker) ]]; then
-    sudo groupadd docker
-fi
-
 if [[ ! -z $(command -v docker) ]]; then
     warning "Adding user ${USER} to Docker group"
+    if [[ -z $(getent group docker) ]]; then
+        sudo groupadd docker
+    fi
+    
     if [[ -z $(id -nG "$USER" | grep docker) ]]; then
         sudo gpasswd -a ${USER} docker
     fi
@@ -149,9 +150,11 @@ if [[ ! -z $(command -v docker) ]]; then
 fi
 
 # Oh My ZSH
-warning "Installing OhMyZsh"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-sed -i 's/robbyrussell/agnoster/' $HOME/.zshrc
+if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    warning "Installing OhMyZsh"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    sed -i 's/robbyrussell/agnoster/' $HOME/.zshrc
+fi
 
 # Clone some ZSH modules
 for module in ${zsh_modules[@]}; do
@@ -173,10 +176,12 @@ warning "Configuring VSCodium"
 mkdir -p $HOME/.config/VSCodium/User
 cp -rf dotfiles/vscodium/* $HOME/.config/VSCodium/
 
-warning "Installing VSCodium extensions"
-for extension in ${vscodium_extensions[@]}; do
-    codium --install-extension ${extension}
-done
+if [[ $(command -v codium) ]]; then
+    warning "Installing VSCodium extensions"
+    for extension in ${vscodium_extensions[@]}; do
+        codium --install-extension ${extension}
+    done
+fi
 
 # User configs
 warning "Restoring user configurations"

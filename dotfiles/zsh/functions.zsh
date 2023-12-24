@@ -4,21 +4,6 @@ function mdc() {
     mkdir ${1} && cd ${1}
 }
 
-# Print the error message, then exit
-function error() {
-    echo ""
-    echo -e "$fg[red]- error: ${@}$reset_color"
-    echo ""
-    exit 1
-}
-
-# Print the warning message and continue
-function warning() {
-    echo ""
-    echo -e "$fg[blue]- warning: ${@}$reset_color"
-    echo ""
-}
-
 function addSSHIdentity() {
     IDENTITY_NAME=$1
     [[ -z $IDENTITY_NAME ]] && error "No SSH identity name provided"

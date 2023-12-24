@@ -9,7 +9,7 @@
     "explorer.confirmDelete": false,
 
     // Workbench
-    "workbench.colorTheme": "Gruvbox Dark Hard",
+    "workbench.colorTheme": "Min Dark",
     "workbench.startupEditor": "none",
 
     // Misc
