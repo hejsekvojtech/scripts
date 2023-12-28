@@ -114,6 +114,12 @@ vscodium_extensions=(
 )
 
 if [[ $DISTRO == "arch" ]]; then
+    packages=("${arch_pkgs[@]}")
+else
+    packages=("${fedora_pkgs[@]}")
+fi
+
+if [[ $DISTRO == "arch" ]]; then
     warning "Enabling multilib repo"
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
