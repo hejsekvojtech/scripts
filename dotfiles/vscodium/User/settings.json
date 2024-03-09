@@ -18,20 +18,19 @@
     "window.titleBarStyle": "custom",
 
     // Integrated Terminal
-    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
     "terminal.integrated.defaultProfile.linux": "zsh",
     "terminal.integrated.fontFamily": "'Source Code Pro'",
 
     // Editor Fonts
     "editor.fontFamily": "'IBM Plex Mono'",
-    "editor.fontSize": 16,
     "editor.fontLigatures": true,
 
     // Formatting
     "editor.detectIndentation": false,
-    "editor.insertSpaces": false,
+    "editor.insertSpaces": true,
     "editor.tabSize": 4,
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
 
     // Formatters
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -39,7 +38,7 @@
         "editor.defaultFormatter": "redhat.vscode-xml"
     },
     "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
+        "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
@@ -53,9 +52,15 @@
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
     },
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
 
     // Prettier
     "prettier.tabWidth": 4,
+
+	// Python
+	"python.languageServer": "Jedi",
 
     // JavaScript / TypeScript
     "javascript.updateImportsOnFileMove.enabled": "always",
@@ -63,5 +68,5 @@
 
     // Plugin telemetry
     "redhat.telemetry.enabled": false,
-    "aws.telemetry": false
+    "aws.telemetry": false,
 }

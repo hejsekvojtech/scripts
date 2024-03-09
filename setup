@@ -21,14 +21,6 @@ function restore_dotfiles() {
     cat dotfiles/${1} >> $HOME/.${1}
 }
 
-# if [[ $EUID -ne 0 ]]; then
-#     error "The script needs to be executed with sudo (sudo ./setup)"
-# fi
-
-# # Make sure we work with current user, not root
-# USER=$SUDO_USER
-# HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-
 # Count input arguments
 if [[ $# != 0 ]]; then
     if [[ $# == 2 ]]; then
@@ -97,20 +89,26 @@ zsh_modules=(
 vscodium_extensions=(
     austin.code-gnu-global
     eamodio.gitlens
+    ecmel.vscode-html-css
     esbenp.prettier-vscode
     miguelsolorio.min-theme
+    mikestead.dotenv
     ms-azuretools.vscode-docker
+    ms-python.black-formatter
+    ms-python.debugpy
     ms-python.python
+    ms-python.vscode-pylance
     ms-vscode.cmake-tools
     ms-vscode.cpptools
     redhat.vscode-xml
     rust-lang.rust-analyzer
     shakram02.bash-beautify
     tamasfe.even-better-toml
+    thog.vscode-asl
     twxs.cmake
     vadimcn.vscode-lldb
-    VisualStudioExptTeam.intellicode-api-usage-examples
-    VisualStudioExptTeam.vscodeintellicode
+    visualstudioexptteam.intellicode-api-usage-examples
+    visualstudioexptteam.vscodeintellicode
 )
 
 if [[ $DISTRO == "arch" ]]; then

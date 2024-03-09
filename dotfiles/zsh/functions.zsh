@@ -4,6 +4,15 @@ function mdc() {
     mkdir ${1} && cd ${1}
 }
 
+function warning() {
+    echo -e "\033[33m⚠️  WARNING: $1\033[0m" >&2
+}
+
+function error() {
+    echo -e "\033[31m❌ ERROR: $1\033[0m" >&2
+    exit 1
+}
+
 function addSSHIdentity() {
     IDENTITY_NAME=$1
     [[ -z $IDENTITY_NAME ]] && error "No SSH identity name provided"
