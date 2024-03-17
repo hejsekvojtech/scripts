@@ -118,6 +118,8 @@ else
 fi
 
 if [[ $DISTRO == "arch" ]]; then
+    warning "Disabling generation of debug packages for makepkg"
+    sudo sed -i "/OPTIONS=/"'s/ debug//' /etc/makepkg.conf
     warning "Enabling multilib repo"
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
@@ -150,7 +152,7 @@ if [[ ! -z $(command -v docker) ]]; then
     fi
     
     warning "Enabling Docker service on init"
-    sudo systemctl enable --now docker.service
+    sudo systemctl enable docker.service
 fi
 
 # Oh My ZSH
