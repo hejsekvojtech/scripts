@@ -16,9 +16,6 @@ export PATH=/usr/local/sbin:$PATH
 export PATH=$HOME/.local/bin:$PATH
 export PATH=$HOME/.local/sbin:$PATH
 
-# NPM user prefix
-export npm_config_prefix="$HOME/.local"
-
 # Terminal history
 export HISTFILE=$ZSH_CONFIG/.zsh_history
 export HISTSIZE=100000
@@ -26,6 +23,3 @@ export HISTFILESIZE=2000000
 
 # UI
 export TERM=xterm-256color
-
-# Disable Wine mono globally
-export WINEDLLOVERRIDES="mshtml,mscoree,winemenubuilder.exe=d"

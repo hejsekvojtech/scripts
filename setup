@@ -88,9 +88,11 @@ zsh_modules=(
 
 vscodium_extensions=(
     austin.code-gnu-global
+    csstools.postcss
     eamodio.gitlens
     ecmel.vscode-html-css
     esbenp.prettier-vscode
+    mechatroner.rainbow-csv
     miguelsolorio.min-theme
     mikestead.dotenv
     ms-azuretools.vscode-docker
@@ -101,6 +103,8 @@ vscodium_extensions=(
     ms-vscode.cmake-tools
     ms-vscode.cpptools
     redhat.vscode-xml
+    redhat.vscode-yaml
+    ritwickdey.liveserver
     rust-lang.rust-analyzer
     shakram02.bash-beautify
     tamasfe.even-better-toml
@@ -109,6 +113,7 @@ vscodium_extensions=(
     vadimcn.vscode-lldb
     visualstudioexptteam.intellicode-api-usage-examples
     visualstudioexptteam.vscodeintellicode
+    
 )
 
 if [[ $DISTRO == "arch" ]]; then
@@ -120,9 +125,6 @@ fi
 if [[ $DISTRO == "arch" ]]; then
     warning "Disabling generation of debug packages for makepkg"
     sudo sed -i "/OPTIONS=/"'s/ debug//' /etc/makepkg.conf
-    warning "Enabling multilib repo"
-    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-    sudo pacman -Syu --noconfirm || error "Something went wrong while updating packages"
 fi
 
 # Install required packages
