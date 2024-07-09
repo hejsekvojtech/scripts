@@ -48,7 +48,6 @@ common_pkgs=(
     android-tools
     clang
     gcc
-    neofetch
     npm
     vim
     zsh
@@ -209,22 +208,13 @@ if [[ $DISTRO == "fedora" ]]; then
     sudo chmod +x /bin/docker-compose
 fi
 
-# My custom gitignore rules
-{
-    echo "out/"
-    echo "*.rej"
-    echo ".DS_Store"
-    echo ".DS_Store?"
-    echo "*.log"
-} >> $HOME/.gitignore_global
-
 if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
     # Setup Git
     git config --global user.name "${GIT_USER_NAME}"
     git config --global user.email "${GIT_USER_MAIL}"
-    git config --global core.excludesfile $HOME/.gitignore_global
     git config --global core.editor vim
     git config --global pull.rebase true
+    git config --global init.defaultBranch master
 fi
 
 addSSHIdentity personal
