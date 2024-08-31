@@ -25,4 +25,4 @@ export HISTFILESIZE=2000000
 export TERM=xterm-256color
 
 # NPM user prefix
-export npm_config_prefix="$HOME/.local"
+export npm_config_prefix=$HOME/.local

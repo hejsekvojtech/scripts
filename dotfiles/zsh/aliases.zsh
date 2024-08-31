@@ -20,13 +20,15 @@ alias gs='git status'
 alias gd='git diff'
 alias glf='git ls-files'
 alias grh='git reset --hard origin/HEAD'
+alias gca='git commit --amend'
+alias gcm='git commit -m'
 
 # Docker
 alias d='docker'
-alias dc='docker-compose'
-alias dcu='docker-compose up'
-alias dcd='docker-compose down'
-alias dcud='docker-compose up -d'
+alias dc='docker compose'
+alias dcu='docker compose up'
+alias dcd='docker compose down'
+alias dcud='docker compose up -d'
 alias dsa='docker stop $(docker ps -a -q)'
 
 # Misc

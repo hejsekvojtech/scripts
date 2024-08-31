@@ -57,7 +57,6 @@ arch_pkgs=(
     android-udev
     base-devel
     docker
-    docker-compose
     inter-font
     reflector
     rsync
@@ -201,12 +200,6 @@ warning "Copying system configurations"
 for conf in etc/*/**; do
     sudo cp $conf /$conf
 done
-
-if [[ $DISTRO == "fedora" ]]; then
-    warning "Copying docker-compose wrapper for Fedora"
-    sudo cp bin/docker-compose
-    sudo chmod +x /bin/docker-compose
-fi
 
 if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
     # Setup Git
