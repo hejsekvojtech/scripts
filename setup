@@ -63,6 +63,7 @@ arch_pkgs=(
     ttf-fira-mono
     ttf-ibm-plex
     ttf-roboto
+    noto-fonts-{cjk,extra,emoji}
     unzip
     zip
 )
@@ -86,8 +87,7 @@ zsh_modules=(
     zsh-syntax-highlighting
 )
 
-vscodium_extensions=(
-    austin.code-gnu-global
+code_extensions=(
     csstools.postcss
     eamodio.gitlens
     ecmel.vscode-html-css
@@ -100,20 +100,12 @@ vscodium_extensions=(
     ms-python.debugpy
     ms-python.python
     ms-python.vscode-pylance
-    ms-vscode.cmake-tools
-    ms-vscode.cpptools
     redhat.vscode-xml
     redhat.vscode-yaml
-    ritwickdey.liveserver
     rust-lang.rust-analyzer
-    shakram02.bash-beautify
     tamasfe.even-better-toml
-    thog.vscode-asl
-    twxs.cmake
     vadimcn.vscode-lldb
-    visualstudioexptteam.intellicode-api-usage-examples
     visualstudioexptteam.vscodeintellicode
-    
 )
 
 if [[ $DISTRO == "arch" ]]; then
@@ -132,8 +124,8 @@ warning "Installing required packages"
 sudo $PKG_INSTALL_CMD ${common_pkgs[@]} ${packages[@]} || error "Error while installing packages"
 
 if [ ! -z $(command -v yay) ]; then
-    warning "Installing VSCodium from AUR"
-    yay -S --answerclean A --answerdiff N --save vscodium-{bin,bin-marketplace}
+    warning "Installing Visual Studio Code from AUR"
+    yay -S --answerclean A --answerdiff N --save visual-studio-code-bin
 fi
 
 if [[ $DISTRO == "fedora" ]]; then
@@ -179,15 +171,15 @@ sed -i "s/=DISTRO=/$DISTRO/" $HOME/.zshrc
 
 cp -r dotfiles/zsh/ $ZSH_CONFIG
 
-# VSCodium config
-warning "Configuring VSCodium"
-mkdir -p $HOME/.config/VSCodium/User
-cp -rf dotfiles/vscodium/* $HOME/.config/VSCodium/
+# Visual Studio Code config
+warning "Configuring Visual Studio Code"
+mkdir -p $HOME/.config/Code/User
+cp -rf dotfiles/code/* $HOME/.config/Code/
 
-if [[ $(command -v codium) ]]; then
-    warning "Installing VSCodium extensions"
-    for extension in ${vscodium_extensions[@]}; do
-        codium --install-extension ${extension}
+if [[ $(command -v code) ]]; then
+    warning "Installing Visual Studio Code extensions"
+    for extension in ${code_extensions[@]}; do
+        code --install-extension ${extension}
     done
 fi
 

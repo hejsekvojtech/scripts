@@ -40,12 +40,6 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "[cpp]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
-    },
-    "[shellscript]": {
-        "editor.defaultFormatter": "shakram02.bash-beautify"
-    },
     "[toml]": {
         "editor.defaultFormatter": "tamasfe.even-better-toml"
     },
