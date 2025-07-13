@@ -38,8 +38,8 @@ fi
 
 DISTRO=$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')
 warning "Your are running $DISTRO based distro"
-if [[ $DISTRO != 'arch' && $DISTRO != 'fedora' ]]; then
-    error "Unsupported distro, this script only supports Arch Linux and Fedora"
+if [[ $DISTRO != 'arch' && $DISTRO != 'fedora' && $DISTRO != 'nixos' ]]; then
+    error "Unsupported distro"
 fi
 
 PKG_INSTALL_CMD=$([[ $DISTRO == "arch" ]] && echo "pacman -Syu --needed --noconfirm" || echo "dnf install -y")
@@ -74,12 +74,10 @@ fedora_pkgs=(
     mozilla-fira-mono-fonts
     google-roboto-fonts 	
     rsms-inter-fonts
-)
-
-fedora_docker_pkgs=(
-    docker-ce
-    docker-ce-cli
-    containerd.io
+    docker-cli
+    containerd
+    docker-compose
+    docker-switch
 )
 
 zsh_modules=(
@@ -126,13 +124,6 @@ sudo $PKG_INSTALL_CMD ${common_pkgs[@]} ${packages[@]} || error "Error while ins
 if [ ! -z $(command -v yay) ]; then
     warning "Installing Visual Studio Code from AUR"
     yay -S --answerclean A --answerdiff N --save visual-studio-code-bin
-fi
-
-if [[ $DISTRO == "fedora" ]]; then
-    warning "Adding Fedora Docker repo"
-    sudo dnf config-manager --assumeyes --add-repo https://download.docker.com/linux/fedora/docker-ce.repo \
-    && $PKG_INSTALL_CMD ${fedora_docker_pkgs[@]} \
-    || warning "Failed to install Docker, please return to this step later"
 fi
 
 if [[ ! -z $(command -v docker) ]]; then
@@ -188,18 +179,21 @@ warning "Restoring user configurations"
 cp -rf dotfiles/config/* $HOME/.config/
 
 # System-wide configs
-warning "Copying system configurations"
-for conf in etc/*/**; do
-    sudo cp $conf /$conf
-done
+if [[ $DISTRO != "nixos" ]]; then
+    warning "Copying system configurations"
+    for conf in etc/*/**; do
+        sudo cp $conf /$conf
+    done
+fi
+
+# Git setup
+git config --global core.editor vim
+git config --global pull.rebase true
+git config --global init.defaultBranch master
 
 if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
-    # Setup Git
     git config --global user.name "${GIT_USER_NAME}"
     git config --global user.email "${GIT_USER_MAIL}"
-    git config --global core.editor vim
-    git config --global pull.rebase true
-    git config --global init.defaultBranch master
 fi
 
 addSSHIdentity personal
