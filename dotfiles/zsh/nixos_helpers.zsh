@@ -11,3 +11,7 @@ function rebuild-boot() {
 function rebuild-upgrade() {
     sudo nixos-rebuild switch --upgrade
 }
+
+function collect-garbage() {
+    sudo nix-collect-garbage -d
+}
