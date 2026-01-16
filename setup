@@ -86,24 +86,33 @@ zsh_modules=(
 )
 
 code_extensions=(
+    bradlc.vscode-tailwindcss
     csstools.postcss
+    dsznajder.es7-react-js-snippets
     eamodio.gitlens
     ecmel.vscode-html-css
     esbenp.prettier-vscode
+    github.copilot
+    github.copilot-chat
     mechatroner.rainbow-csv
     miguelsolorio.min-theme
     mikestead.dotenv
+    ms-azuretools.vscode-containers
     ms-azuretools.vscode-docker
     ms-python.black-formatter
     ms-python.debugpy
     ms-python.python
     ms-python.vscode-pylance
+    ms-python.vscode-python-envs
+    ms-vscode-remote.remote-ssh
+    ms-vscode-remote.remote-ssh-edit
+    ms-vscode.remote-explorer
     redhat.vscode-xml
     redhat.vscode-yaml
+    ritwickdey.liveserver
     rust-lang.rust-analyzer
     tamasfe.even-better-toml
     vadimcn.vscode-lldb
-    visualstudioexptteam.vscodeintellicode
 )
 
 if [[ $DISTRO == "arch" ]]; then
