@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Files
 alias md='mkdir -p'

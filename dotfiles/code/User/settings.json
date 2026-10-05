@@ -53,14 +53,10 @@
     // Prettier
     "prettier.tabWidth": 4,
 
-	// Python
-	"python.languageServer": "Jedi",
-
     // JavaScript / TypeScript
     "javascript.updateImportsOnFileMove.enabled": "always",
     "typescript.updateImportsOnFileMove.enabled": "always",
 
     // Plugin telemetry
     "redhat.telemetry.enabled": false,
-    "aws.telemetry": false,
 }

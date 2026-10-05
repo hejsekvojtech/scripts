@@ -14,4 +14,14 @@ function rebuild-upgrade() {
 
 function collect-garbage() {
     sudo nix-collect-garbage -d
+    nix-collect-garbage -d
+}
+
+function upgrade() {
+    rebuild-upgrade || return
+    _upgrade_extras
+}
+
+function cleanup() {
+    collect-garbage
 }

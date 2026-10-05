@@ -1,61 +1,51 @@
 #!/bin/bash
+#
+# Usage: ./setup [<git user name> <git email>]   (name and email in any order)
+
+set -euo pipefail
+
+cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 source dotfiles/zsh/environment.zsh
 source dotfiles/zsh/functions.zsh
 
 function error() {
     echo ""
-    echo -e "- error: ${@}"
+    echo -e "- error: ${*}" >&2
     echo ""
     exit 1
 }
 
-# Print the warning message and continue
+# Print the message and continue
 function warning() {
-    echo -e "- ${@}"
+    echo -e "- ${*}"
     echo ""
 }
 
-function restore_dotfiles() {
-    warning "Restoring .${1}"
-    cat dotfiles/${1} >> $HOME/.${1}
-}
+trap 'error "Failed at line ${LINENO}: ${BASH_COMMAND}"' ERR
 
-# Count input arguments
-if [[ $# != 0 ]]; then
-    if [[ $# == 2 ]]; then
-        for arg in ${@}; do
-            if [[ ${arg} =~ '@' ]]; then
-                GIT_USER_MAIL=${arg}
-            else
-                GIT_USER_NAME="${arg}"
-            fi
-        done
-    else
-        error "Additional arguments are required! \nUsage: ./build-setup <github username> <your email> (or vice-versa)"
-    fi
-fi
+OS_RELEASE=${OS_RELEASE:-/etc/os-release}
+BLOCK_BEGIN=">>> managed by scripts/setup >>>"
+BLOCK_END="<<< managed by scripts/setup <<<"
 
-DISTRO=$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')
-warning "Your are running $DISTRO based distro"
-if [[ $DISTRO != 'arch' && $DISTRO != 'fedora' && $DISTRO != 'nixos' ]]; then
-    error "Unsupported distro"
-fi
-
-PKG_INSTALL_CMD=$([[ $DISTRO == "arch" ]] && echo "pacman -Syu --needed --noconfirm" || echo "dnf install -y")
+GIT_USER_NAME=""
+GIT_USER_MAIL=""
 
 common_pkgs=(
     android-tools
     clang
     gcc
+    git
     npm
     vim
     zsh
 )
 
 arch_pkgs=(
+    adobe-source-code-pro-fonts
     android-udev
     base-devel
+    pacman-contrib
     docker
     inter-font
     reflector
@@ -69,10 +59,11 @@ arch_pkgs=(
 )
 
 fedora_pkgs=(
+    adobe-source-code-pro-fonts
     dnf-plugins-core
     ibm-plex-mono-fonts
     mozilla-fira-mono-fonts
-    google-roboto-fonts 	
+    google-roboto-fonts
     rsms-inter-fonts
     docker-cli
     containerd
@@ -86,126 +77,328 @@ zsh_modules=(
 )
 
 code_extensions=(
+    anthropic.claude-code
     bradlc.vscode-tailwindcss
-    csstools.postcss
-    dsznajder.es7-react-js-snippets
     eamodio.gitlens
     ecmel.vscode-html-css
     esbenp.prettier-vscode
-    github.copilot
-    github.copilot-chat
     mechatroner.rainbow-csv
     miguelsolorio.min-theme
     mikestead.dotenv
     ms-azuretools.vscode-containers
-    ms-azuretools.vscode-docker
     ms-python.black-formatter
-    ms-python.debugpy
     ms-python.python
     ms-python.vscode-pylance
-    ms-python.vscode-python-envs
     ms-vscode-remote.remote-ssh
-    ms-vscode-remote.remote-ssh-edit
-    ms-vscode.remote-explorer
     redhat.vscode-xml
     redhat.vscode-yaml
-    ritwickdey.liveserver
     rust-lang.rust-analyzer
     tamasfe.even-better-toml
     vadimcn.vscode-lldb
 )
 
-if [[ $DISTRO == "arch" ]]; then
-    packages=("${arch_pkgs[@]}")
-else
-    packages=("${fedora_pkgs[@]}")
-fi
+code_extension_deps=(
+    ms-python.debugpy
+    ms-python.vscode-python-envs
+    ms-vscode-remote.remote-ssh-edit
+    ms-vscode.remote-explorer
+)
 
-if [[ $DISTRO == "arch" ]]; then
-    warning "Disabling generation of debug packages for makepkg"
-    sudo sed -i "/OPTIONS=/"'s/ debug//' /etc/makepkg.conf
-fi
+function parse_args() {
+    if [[ $# == 0 ]]; then
+        return 0
+    fi
+    if [[ $# != 2 ]]; then
+        error "Expected 0 or 2 arguments! \nUsage: ./setup <git user name> <your email> (or vice-versa)"
+    fi
 
-# Install required packages
-warning "Installing required packages"
-sudo $PKG_INSTALL_CMD ${common_pkgs[@]} ${packages[@]} || error "Error while installing packages"
+    for arg in "${@}"; do
+        if [[ ${arg} == *@* ]]; then
+            GIT_USER_MAIL=${arg}
+        else
+            GIT_USER_NAME=${arg}
+        fi
+    done
+}
 
-if [ ! -z $(command -v yay) ]; then
-    warning "Installing Visual Studio Code from AUR"
-    yay -S --answerclean A --answerdiff N --save visual-studio-code-bin
-fi
+# Sets DISTRO (os-release ID) and FAMILY (arch, fedora or nixos)
+function detect_distro() {
+    [[ -r $OS_RELEASE ]] || error "Cannot read ${OS_RELEASE}"
 
-if [[ ! -z $(command -v docker) ]]; then
+    local ID="" ID_LIKE=""
+    # shellcheck disable=SC1090
+    source <(grep -E '^(ID|ID_LIKE)=' "$OS_RELEASE")
+
+    DISTRO=${ID}
+    case " ${ID} ${ID_LIKE} " in
+        *" arch "*)   FAMILY=arch ;;
+        *" fedora "*) FAMILY=fedora ;;
+        *" nixos "*)  FAMILY=nixos ;;
+        *) error "Unsupported distro: ${DISTRO:-unknown}" ;;
+    esac
+}
+
+function write_managed_block() {
+    local dest=$1 comment=$2
+    local begin="${comment} ${BLOCK_BEGIN}" end="${comment} ${BLOCK_END}"
+
+    mkdir -p "$(dirname "$dest")"
+    touch "$dest"
+
+    awk -v b="$begin" -v e="$end" '$0 == b {skip = 1} !skip {print} $0 == e {skip = 0}' "$dest" > "$dest.tmp"
+    {
+        echo "$begin"
+        cat
+        echo ""
+        echo "$end"
+    } >> "$dest.tmp"
+    cat "$dest.tmp" > "$dest"
+    rm "$dest.tmp"
+}
+
+function install_packages() {
+    case $FAMILY in
+        arch)
+            warning "Disabling generation of debug packages for makepkg"
+            sudo sed -i '/^OPTIONS=/s/ debug//' /etc/makepkg.conf
+
+            warning "Installing required packages"
+            sudo pacman -Syu --needed --noconfirm "${common_pkgs[@]}" "${arch_pkgs[@]}"
+            ;;
+        fedora)
+            warning "Installing required packages"
+            sudo dnf install -y "${common_pkgs[@]}" "${fedora_pkgs[@]}"
+            ;;
+        nixos)
+            warning "Skipping package installation, manage packages in configuration.nix"
+            ;;
+    esac
+}
+
+function aur_helper() {
+    local helper
+    for helper in paru yay; do
+        if command -v "$helper" &>/dev/null; then
+            echo "$helper"
+            return 0
+        fi
+    done
+
+    warning "No AUR helper found, bootstrapping yay" >&2
+    local build_dir
+    build_dir=$(mktemp -d)
+    git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$build_dir/yay-bin" >&2
+    (cd "$build_dir/yay-bin" && makepkg -si --noconfirm >&2)
+    rm -rf "$build_dir"
+    echo yay
+}
+
+function install_vscode() {
+    case $FAMILY in
+        arch)
+            local helper
+            helper=$(aur_helper)
+            warning "Installing Visual Studio Code using ${helper}"
+            "$helper" -S --needed --noconfirm visual-studio-code-bin
+            ;;
+        fedora)
+            if [[ ! -f /etc/yum.repos.d/vscode.repo ]]; then
+                warning "Adding Visual Studio Code repository"
+                sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                sudo tee /etc/yum.repos.d/vscode.repo >/dev/null <<'EOF'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+autorefresh=1
+type=rpm-md
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+EOF
+            fi
+            warning "Installing Visual Studio Code"
+            sudo dnf install -y code
+            ;;
+        nixos)
+            warning "Skipping Visual Studio Code installation, manage it in configuration.nix"
+            ;;
+    esac
+}
+
+function setup_rust() {
+    if [[ $FAMILY == nixos ]]; then
+        warning "Skipping rustup, rustup toolchains need nix-ld on NixOS"
+        return 0
+    fi
+
+    local rustup=${CARGO_HOME:-$HOME/.cargo}/bin/rustup
+    if [[ -x $rustup ]]; then
+        warning "Updating Rust toolchains"
+        "$rustup" update
+    else
+        warning "Installing Rust using rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain stable
+    fi
+    "$rustup" component add rust-src rust-analyzer clippy rustfmt
+}
+
+function install_jetbrains_toolbox() {
+    local install_dir=$HOME/.local/share/JetBrains/Toolbox
+    if [[ $FAMILY == nixos ]] || command -v jetbrains-toolbox &>/dev/null || [[ -x $install_dir/bin/jetbrains-toolbox ]]; then
+        return 0
+    fi
+
+    local platform=linux
+    [[ $(uname -m) == aarch64 ]] && platform=linuxARM64
+
+    warning "Downloading JetBrains Toolbox"
+    local tmp url
+    tmp=$(mktemp -d)
+    url=$(curl -fsSL -o "$tmp/toolbox.tar.gz" -w '%{url_effective}' \
+        "https://data.services.jetbrains.com/products/download?code=TBA&platform=${platform}")
+    curl -fsSL "${url}.sha256" | awk -v f="$tmp/toolbox.tar.gz" '{print $1 "  " f}' | sha256sum -c --quiet
+
+    mkdir -p "$install_dir" "$HOME/.local/bin"
+    tar -xzf "$tmp/toolbox.tar.gz" --strip-components=1 -C "$install_dir"
+    ln -sf "$install_dir/bin/jetbrains-toolbox" "$HOME/.local/bin/jetbrains-toolbox"
+    rm -rf "$tmp"
+    warning "Launch jetbrains-toolbox once to finish its setup"
+}
+
+function setup_docker() {
+    if [[ $FAMILY == nixos ]] || ! command -v docker &>/dev/null; then
+        return 0
+    fi
+
     warning "Adding user ${USER} to Docker group"
-    if [[ -z $(getent group docker) ]]; then
-        sudo groupadd docker
+    getent group docker >/dev/null || sudo groupadd docker
+    id -nG "$USER" | grep -qw docker || sudo usermod -aG docker "$USER"
+
+    if systemctl list-unit-files docker.service &>/dev/null; then
+        warning "Enabling Docker service on init"
+        sudo systemctl enable docker.service
+    else
+        warning "docker.service not found, not enabling it"
     fi
-    
-    if [[ -z $(id -nG "$USER" | grep docker) ]]; then
-        sudo gpasswd -a ${USER} docker
+}
+
+function setup_shell() {
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        warning "Installing OhMyZsh"
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        sed -i 's/robbyrussell/agnoster/' "$HOME/.zshrc"
     fi
-    
-    warning "Enabling Docker service on init"
-    sudo systemctl enable docker.service
-fi
 
-# Oh My ZSH
-if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-    warning "Installing OhMyZsh"
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    sed -i 's/robbyrussell/agnoster/' $HOME/.zshrc
-fi
+    local plugins_dir=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins
+    for module in "${zsh_modules[@]}"; do
+        if [[ ! -d "$plugins_dir/$module" ]]; then
+            warning "Installing ZSH module ${module}"
+            git clone --depth 1 "https://github.com/zsh-users/${module}.git" "$plugins_dir/$module"
+        fi
+        if ! grep -qE "^plugins=\(.*\b${module}\b" "$HOME/.zshrc"; then
+            sed -i "/^plugins=/ s/)/ ${module})/" "$HOME/.zshrc"
+        fi
+    done
 
-# Clone some ZSH modules
-for module in ${zsh_modules[@]}; do
-    git clone https://github.com/zsh-users/${module}.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/${module}
-    sed -i "/^plugins=/ s/)/ $module)/" $HOME/.zshrc
-done
+    sed "s/=DISTRO=/${FAMILY}/" dotfiles/zshrc | write_managed_block "$HOME/.zshrc" '#'
+    write_managed_block "$HOME/.vimrc" '"' < dotfiles/vimrc
 
-# Restore core configs
-restore_dotfiles zshrc
-restore_dotfiles vimrc
+    mkdir -p "$ZSH_CONFIG"
+    cp -r dotfiles/zsh/. "$ZSH_CONFIG/"
 
-# Only load helpers for running distro
-sed -i "s/=DISTRO=/$DISTRO/" $HOME/.zshrc
+    local zsh_path current_shell
+    zsh_path=$(command -v zsh)
+    current_shell=$(getent passwd "$USER" | cut -d: -f7)
+    if [[ $FAMILY != nixos && $current_shell != "$zsh_path" ]]; then
+        warning "Changing login shell to ${zsh_path}"
+        sudo chsh -s "$zsh_path" "$USER"
+    fi
+}
 
-cp -r dotfiles/zsh/ $ZSH_CONFIG
+function setup_vscode() {
+    warning "Configuring Visual Studio Code"
+    mkdir -p "$HOME/.config/Code/User"
+    cp -f dotfiles/code/User/*.json "$HOME/.config/Code/User/"
 
-# Visual Studio Code config
-warning "Configuring Visual Studio Code"
-mkdir -p $HOME/.config/Code/User
-cp -rf dotfiles/code/* $HOME/.config/Code/
+    if ! command -v code &>/dev/null; then
+        warning "Visual Studio Code not found, skipping extensions"
+        return 0
+    fi
 
-if [[ $(command -v code) ]]; then
     warning "Installing Visual Studio Code extensions"
-    for extension in ${code_extensions[@]}; do
-        code --install-extension ${extension}
+    local args=() extension
+    for extension in "${code_extensions[@]}"; do
+        args+=(--install-extension "$extension")
     done
-fi
+    code "${args[@]}" --force
 
-# User configs
-warning "Restoring user configurations"
-cp -rf dotfiles/config/* $HOME/.config/
-
-# System-wide configs
-if [[ $DISTRO != "nixos" ]]; then
-    warning "Copying system configurations"
-    for conf in etc/*/**; do
-        sudo cp $conf /$conf
+    local wanted
+    wanted=$(printf '%s\n' "${code_extensions[@]}" "${code_extension_deps[@]}" | tr '[:upper:]' '[:lower:]')
+    local installed
+    mapfile -t installed < <(code --list-extensions)
+    for extension in "${installed[@]}"; do
+        if ! grep -qxF "${extension,,}" <<< "$wanted"; then
+            warning "Removing unlisted extension ${extension}"
+            code --uninstall-extension "$extension" || warning "Could not remove ${extension}"
+        fi
     done
+}
+
+function restore_configs() {
+    warning "Restoring user configurations"
+    mkdir -p "$HOME/.config"
+    cp -rf dotfiles/config/. "$HOME/.config/"
+
+    if [[ $FAMILY != nixos ]]; then
+        warning "Copying system configurations"
+        local conf confs
+        mapfile -t confs < <(find etc -type f)
+        for conf in "${confs[@]}"; do
+            sudo install -Dm644 "$conf" "/$conf"
+        done
+    fi
+}
+
+function setup_git() {
+    git config --global core.editor vim
+    git config --global pull.rebase true
+    git config --global init.defaultBranch master
+
+    if [[ -n $GIT_USER_MAIL && -n $GIT_USER_NAME ]]; then
+        git config --global user.name "${GIT_USER_NAME}"
+        git config --global user.email "${GIT_USER_MAIL}"
+    fi
+}
+
+function setup_ssh() {
+    addSSHIdentity personal "$GIT_USER_MAIL"
+    write_managed_block "$HOME/.ssh/config" '#' < dotfiles/ssh/config
+    chmod 600 "$HOME/.ssh/config"
+}
+
+function main() {
+    if [[ $EUID == 0 ]]; then
+        error "Run this script as a regular user, it calls sudo when needed"
+    fi
+
+    parse_args "${@}"
+    detect_distro
+    warning "You are running ${DISTRO} (${FAMILY} based distro)"
+
+    install_packages
+    install_vscode
+    setup_rust
+    install_jetbrains_toolbox
+    setup_docker
+    setup_shell
+    setup_vscode
+    restore_configs
+    setup_git
+    setup_ssh
+
+    echo "Done! You can now reboot"
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "${@}"
 fi
-
-# Git setup
-git config --global core.editor vim
-git config --global pull.rebase true
-git config --global init.defaultBranch master
-
-if [[ ! -z "$GIT_USER_MAIL" ]] && [[ ! -z "$GIT_USER_NAME" ]]; then
-    git config --global user.name "${GIT_USER_NAME}"
-    git config --global user.email "${GIT_USER_MAIL}"
-fi
-
-addSSHIdentity personal
-cat dotfiles/ssh/config >> $HOME/.ssh/config
-
-[[ $? == 0 ]] && echo "Done! You can now reboot" || echo "The setup ended with errors!"

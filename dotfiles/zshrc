@@ -13,6 +13,5 @@ unsetopt autocd beep notify
 # Vi key bindings
 bindkey -v
 
-# Autocompletion
-autoload -Uz compinit colors
-compinit
+# Colors (OhMyZsh already runs compinit)
+autoload -Uz colors
