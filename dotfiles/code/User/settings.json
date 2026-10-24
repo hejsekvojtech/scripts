@@ -20,7 +20,7 @@
     // Integrated Terminal
     "terminal.integrated.enableMultiLinePasteWarning": "never",
     "terminal.integrated.defaultProfile.linux": "zsh",
-    "terminal.integrated.fontFamily": "'Source Code Pro'",
+    "terminal.integrated.fontFamily": "'IBM Plex Mono'",
 
     // Editor Fonts
     "editor.fontFamily": "'IBM Plex Mono'",

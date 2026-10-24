@@ -32,7 +32,6 @@ GIT_USER_NAME=""
 GIT_USER_MAIL=""
 
 common_pkgs=(
-    android-tools
     clang
     gcc
     git
@@ -43,6 +42,7 @@ common_pkgs=(
 
 arch_pkgs=(
     adobe-source-code-pro-fonts
+    android-tools
     android-udev
     base-devel
     pacman-contrib
@@ -60,6 +60,7 @@ arch_pkgs=(
 
 fedora_pkgs=(
     adobe-source-code-pro-fonts
+    android-tools
     dnf-plugins-core
     ibm-plex-mono-fonts
     mozilla-fira-mono-fonts
@@ -69,6 +70,25 @@ fedora_pkgs=(
     containerd
     docker-compose
     docker-switch
+)
+
+ubuntu_pkgs=(
+    adb
+    android-sdk-platform-tools-common
+    build-essential
+    curl
+    docker.io
+    docker-buildx
+    docker-compose-v2
+    fastboot
+    fonts-ibm-plex
+    fonts-inter
+    fonts-noto-{core,cjk,extra,color-emoji}
+    fonts-roboto
+    gpg
+    rsync
+    unzip
+    zip
 )
 
 zsh_modules=(
@@ -121,7 +141,7 @@ function parse_args() {
     done
 }
 
-# Sets DISTRO (os-release ID) and FAMILY (arch, fedora or nixos)
+# Sets DISTRO (os-release ID) and FAMILY (arch, fedora, nixos or ubuntu)
 function detect_distro() {
     [[ -r $OS_RELEASE ]] || error "Cannot read ${OS_RELEASE}"
 
@@ -134,6 +154,7 @@ function detect_distro() {
         *" arch "*)   FAMILY=arch ;;
         *" fedora "*) FAMILY=fedora ;;
         *" nixos "*)  FAMILY=nixos ;;
+        *" ubuntu "*) FAMILY=ubuntu ;;
         *) error "Unsupported distro: ${DISTRO:-unknown}" ;;
     esac
 }
@@ -168,6 +189,11 @@ function install_packages() {
         fedora)
             warning "Installing required packages"
             sudo dnf install -y "${common_pkgs[@]}" "${fedora_pkgs[@]}"
+            ;;
+        ubuntu)
+            warning "Installing required packages"
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${common_pkgs[@]}" "${ubuntu_pkgs[@]}"
             ;;
         nixos)
             warning "Skipping package installation, manage packages in configuration.nix"
@@ -218,6 +244,23 @@ EOF
             fi
             warning "Installing Visual Studio Code"
             sudo dnf install -y code
+            ;;
+        ubuntu)
+            if [[ ! -f /etc/apt/sources.list.d/vscode.sources && ! -f /etc/apt/sources.list.d/vscode.list ]]; then
+                warning "Adding Visual Studio Code repository"
+                curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor --yes -o /usr/share/keyrings/microsoft.gpg
+                sudo tee /etc/apt/sources.list.d/vscode.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://packages.microsoft.com/repos/code
+Suites: stable
+Components: main
+Architectures: amd64,arm64,armhf
+Signed-By: /usr/share/keyrings/microsoft.gpg
+EOF
+                sudo apt-get update
+            fi
+            warning "Installing Visual Studio Code"
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y code
             ;;
         nixos)
             warning "Skipping Visual Studio Code installation, manage it in configuration.nix"

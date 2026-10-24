@@ -1,7 +1,10 @@
 ## Supported distros
 
-Arch Linux, CachyOS (and other Arch based distros), Fedora and NixOS.
+Arch Linux, CachyOS (and other Arch based distros), Fedora, Ubuntu (and Ubuntu
+based distros like Linux Mint or Pop!_OS) and NixOS.
 On NixOS only the dotfiles are restored, packages are managed in `configuration.nix`.
+On Ubuntu the `universe` and `multiverse` components must be enabled (they are by
+default on desktop installs).
 
 Besides packages and dotfiles the script installs Visual Studio Code, Rust via
 [rustup](https://rustup.rs) and JetBrains Toolbox (downloaded from jetbrains.com,
@@ -22,6 +25,12 @@ sudo pacman -S --needed git
 
 ```sh
 sudo dnf install git
+```
+
+### On Ubuntu
+
+```sh
+sudo apt install git
 ```
 
 ## Launching the script
